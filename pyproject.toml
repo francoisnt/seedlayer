@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Seedlayer"
+dynamic = ["version"]  # Version is computed dynamically
+description = "Deterministic DB seeding for SQLAlchemy"
+dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.1",
+    "ruff==0.12.10",
+    "seedlayer",
+    "pytest-cov==6.2.1"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}  # <-- “src layout”
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]  # Configures setuptools_scm to derive version from Git
+
+[tool.ruff]
+line-length = 100  # Matches Black’s default
+target-version = "py311"  # Your Python version
+
+[tool.ruff.format]
+quote-style = "double"  # Use double quotes for strings
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I"]  # Select lint rules (PEP 8, bugbear, isort)
+ignore = []  # Optionally ignore specific rules
+extend-select = ["E501"]
+
