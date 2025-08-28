@@ -1,11 +1,12 @@
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "Seedlayer"
-dynamic = ["version"]  # Version is computed dynamically
+name = "SeedLayer"
+version = "0.1.0"
 description = "Deterministic DB seeding for SQLAlchemy"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "François Naggar-Tremblay", email = "francois.n.tremblay@gmail.com" }
+]
 dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
 
 [project.optional-dependencies]
@@ -16,16 +17,12 @@ dev = [
     "pytest-cov==6.2.1"
 ]
 
-[tool.setuptools]
-package-dir = {"" = "src"}  # <-- “src layout”
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools_scm]  # Configures setuptools_scm to derive version from Git
+[build-system]
+requires = ["uv_build>=0.8.13,<0.9.0"]
+build-backend = "uv_build"
 
 [tool.ruff]
-line-length = 100  # Matches Black’s default
+line-length = 100
 target-version = "py311"  # Your Python version
 
 [tool.ruff.format]
@@ -38,4 +35,6 @@ line-ending = "auto"
 select = ["E", "F", "B", "I"]  # Select lint rules (PEP 8, bugbear, isort)
 ignore = []  # Optionally ignore specific rules
 extend-select = ["E501"]
+
+
 
