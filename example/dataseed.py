@@ -92,39 +92,25 @@ class CustomCommerceProvider(BaseProvider):
             "
 
 
-# Create a session
-Session = sessionmaker(bind=engine)
-session = Session()
-
-# Define seed plan: 5 users, 10 orders
+# Define seed plan:
 seed_plan = {
-    Category: 700,
-    Product: 700,
-    Customer: 700,
-    Order: 700,
-    OrderItem: 700,
+    Category: 20000,
+    Product: 20000,
+    Customer: 20000,
+    Order: 20000,
+    OrderItem: 20000,
 }
 
-# Initiate SeedLayer with session and plan
-seed_layer = SeedLayer(session, seed_plan)
+Session = sessionmaker(bind=engine)
+with Session() as session:
+    # Initiate SeedLayer with session and plan
+    seed_layer = SeedLayer(session, seed_plan)
 
-seed_layer.add_faker_provider(CustomCommerceProvider)
+    # Set seed for reproducible results
+    seed_layer.configure_faker(seed=42)
 
-# Seed the database
-seed_layer.seed()
+    # Add custom Faker provider
+    seed_layer.add_faker_provider(CustomCommerceProvider)
 
-# # Create and run seeder
-# with Session(engine) as session:
-#     seeder = SeedLayer(session, seed_plan, faker=Faker())
-#     seeder.configure_faker(seed=42)  # Set seed for reproducible results
-#     seeder.seed()
-
-#     # Query results to verify
-#     print("Seeded Users:")
-#     for user in session.query(User).all():
-#         print(f"  {user.id}: {user.username} ({user.email})")
-
-#     print("\nSeeded Orders:")
-#     for order in session.query(Order).all():
-#         print(f"  {order.id}: User {order.user_id}, Date {order.order_date}, \
-#               Amount {order.amount}")
+    # Generate Data
+    seed_layer.seed()

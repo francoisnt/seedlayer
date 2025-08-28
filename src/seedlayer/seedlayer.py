@@ -320,6 +320,8 @@ class SeedLayer:
         seed_plan: SeedPlan,
         type_defaults: TypeDefaults = TYPE_DEFAULTS,
     ):
+        if seed_plan is None:
+            raise ValueError("seed_plan is missing")
         self.type_defaults: TypeDefaults = TYPE_DEFAULTS | type_defaults
         self.faker: Faker = Faker()
         self._session: Session = session
