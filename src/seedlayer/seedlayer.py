@@ -27,7 +27,7 @@ from typing import (
 )
 
 from faker import Faker
-from sqlalchemy import UUID, Boolean, Column, DateTime, Float, Integer, String, Text, insert
+from sqlalchemy import UUID, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.types import TypeEngine
 
@@ -363,39 +363,35 @@ class SeedLayer:
         if seed is not None:
             self.faker.seed_instance(seed)
 
-    def seed(self, batch_size: int = 1000) -> None:
-        """Seed all models in seed_plan dict into the DB, respecting FK dependencies.
+    def seed(self):
+        """Seed all models in seed_plan dict into the DB, respecting FK dependencies."""
 
-        Args:
-            batch_size (int, optional): Number of rows to insert in each batch. Defaults to 1000.
-        """
         logger.info(f"Model seeding order: {[m for m in self.model_seed_order]}")
-        supports_returning = self._session.bind.dialect.supports_returning
-        with self._session.begin():
-            for model_name in self.model_seed_order:
-                model = self.models[model_name]
-                count = model.nb_of_rows_to_seed
-                logger.info(f"Seeding {count} rows for {model.name}")
-                fake_rows = model.fake_rows(
-                    count, models=self.models, faker=self.faker, type_defaults=self.type_defaults
-                )
-                if not fake_rows:
-                    logger.warning(f"No rows generated for model {model.name}; skipping insert")
-                    continue
-                for i in range(0, len(fake_rows), batch_size):
-                    batch = fake_rows[i : i + batch_size]
-                    if supports_returning:
-                        result = self._session.scalars(
-                            insert(model.base_model).returning(model.base_model), batch
-                        )
-                        model._process_query_result(result.all(), new_data=True)
-                    else:
-                        self._session.execute(insert(model.base_model), batch)
-                        query = self._session.query(
-                            *[getattr(model.base_model, col) for col in model.primary_keys]
-                        )
-                        model._process_query_result(query, new_data=True)
-                    self._session.flush()
+
+        # TODO: transaction (per model?)
+
+        for model_name in self.model_seed_order:
+            model = self.models[model_name]
+            count = model.nb_of_rows_to_seed
+            logger.info(f"Seeding {count} rows for {model.name}")
+
+            fake_rows = model.fake_rows(
+                count, models=self.models, faker=self.faker, type_defaults=self.type_defaults
+            )
+            objects = []
+            for row_data in fake_rows:
+                obj = model.base_model(**row_data)
+                self._session.add(obj)
+                objects.append(obj)
+
+            self._session.flush()
+
+            model._process_query_result(objects, new_data=True)
+
+            self._session.commit()
+
+            for obj in objects:
+                self._session.refresh(obj, attribute_names=model.primary_keys)
 
     def __repr__(self):
         # Simple printout for debugging
