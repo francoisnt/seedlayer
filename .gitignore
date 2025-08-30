@@ -11,3 +11,6 @@ wheels/
 
 # sqlite database
 */seeded_data.db
+
+# pytest
+.pytest_cache/

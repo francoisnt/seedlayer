@@ -17,79 +17,18 @@ Base.metadata.create_all(engine)
 
 class CustomCommerceProvider(BaseProvider):
     def product_name(self):
-        adjectives = [
-            "Awesome",
-            "Practical",
-            "Sleek",
-            "Ergonomic",
-            "Gorgeous",
-            "Innovative",
-            "Stylish",
-        ]
-        sizes = [
-            "Little",
-            "Medium",
-            "Regular",
-            "Large",
-            "Extra Large",
-            "Small",
-            "Big",
-            "Mini",
-            "Jumbo",
-            "Standard",
-        ]
-        colors = [
-            "Red",
-            "Blue",
-            "Green",
-            "Black",
-            "White",
-            "Silver",
-            "Gold",
-            "Purple",
-            "Yellow",
-            "Gray",
-        ]
-        materials = [
-            "Steel",
-            "Wooden",
-            "Plastic",
-            "Cotton",
-            "Granite",
-            "Leather",
-            "Glass",
-            "Ceramic",
-            "Metal",
-            "Fabric",
-        ]
-        products = [
-            "Bookshelf",
-            "Cabinet",
-            "Dresser",
-            "Mattress",
-            "Headset",
-            "Camera",
-            "Printer",
-            "Tablet",
-            "Phone",
-            "Charger",
-            "Fan",
-            "Heater",
-            "Blender",
-            "Toaster",
-            "Kettle",
-            "Microwave",
-            "Vase",
-            "Candle",
-            "Frame",
-        ]
+        adjectives = ["Awesome", "Practical", "Sleek", "Amazing", "Ergonomic", "Gorgeous", "Gold"]
+        sizes = ["Little", "Small", "Medium", "Regular", "Large", "Big", "Extra Large", "Jumbo"]
+        colors = ["Red", "Blue", "Green", "Yellow", "White", "Silver"]
+        materials = ["Steel", "Wooden", "Plastic", "Cotton", "Granite", "Leather"]
+        products = ["Bookshelf", "Cabinet", "Dresser", "Mattress", "Headset", "Camera"]
         return f"\
             {self.random_element(adjectives)} \
             {self.random_element(sizes)} \
             {self.random_element(colors)} \
             {self.random_element(materials)} \
             {self.random_element(products)} \
-            "
+            {self.random_int(min=1, max=9000)} "
 
 
 # Define seed plan:
