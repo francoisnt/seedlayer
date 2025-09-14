@@ -22,17 +22,17 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"  # Your Python version
+target-version = "py311"
 
 [tool.ruff.format]
-quote-style = "double"  # Use double quotes for strings
+quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "I"]  # Select lint rules (PEP 8, bugbear, isort)
-ignore = []  # Optionally ignore specific rules
+select = ["E", "F", "B", "I"]
+ignore = []
 extend-select = ["E501"]
 
 [tool.uv.workspace]
