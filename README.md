@@ -347,9 +347,13 @@ This outputs a formatted summary of existing and new IDs, as well as unique valu
 Contributions are welcome! Please submit a pull request or open an issue on the project repository.
 
 1. Clone this repository.
-2. Create a Python virtual environment
-3. Install dependencies: `pip install -e .[dev]`.
-4. Make changes and submit a pull request.
+2. Install dependencies using [uv](https://github.com/astral-sh/uv):
+
+    ```bash
+    uv sync --all-extras --dev
+    ```
+
+3. Make your changes and submit a pull request.
 
 ## License
 

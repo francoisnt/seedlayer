@@ -33,11 +33,11 @@ class CustomCommerceProvider(BaseProvider):
 
 # Define seed plan:
 seed_plan = {
-    Category: 20000,
-    Product: 20000,
-    Customer: 20000,
-    Order: 20000,
-    OrderItem: 20000,
+    Category: 700,
+    Product: 700,
+    Customer: 700,
+    Order: 700,
+    OrderItem: 700,
 }
 
 Session = sessionmaker(bind=engine)

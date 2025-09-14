@@ -239,6 +239,7 @@ wheels = [
 
 [[package]]
 name = "seedlayer"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "faker" },
