@@ -9,12 +9,11 @@ authors = [
 ]
 dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest>=8.4.1",
-    "ruff==0.12.10",
-    "seedlayer",
-    "pytest-cov==6.2.1"
+  "pytest>=8.4.1",
+  "pytest-cov==6.2.1",
+  "ruff==0.12.10"
 ]
 
 [build-system]
@@ -36,5 +35,9 @@ select = ["E", "F", "B", "I"]  # Select lint rules (PEP 8, bugbear, isort)
 ignore = []  # Optionally ignore specific rules
 extend-select = ["E501"]
 
+[tool.uv.workspace]
+members = ["."]
 
-
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

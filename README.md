@@ -349,11 +349,20 @@ Contributions are welcome! Please submit a pull request or open an issue on the 
 1. Clone this repository.
 2. Install dependencies using [uv](https://github.com/astral-sh/uv):
 
-    ```bash
-    uv sync --all-extras --dev
-    ```
+   ```bash
+   uv sync --dev
+   ```
 
-3. Make your changes and submit a pull request.
+3. Use `uv run` to run common development tasks (no need to activate the virtual environment):
+
+   ```bash
+   uv run pytest                        # run tests
+   uv run pytest --cov=seedlayer        # run tests with coverage
+   uv run ruff check .                  # lint
+   uv run ruff format                   # autoformat
+   ```
+
+4. Make your changes and submit a pull request.
 
 ## License
 
