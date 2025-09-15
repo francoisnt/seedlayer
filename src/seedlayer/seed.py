@@ -91,11 +91,9 @@ class Seed:
         try:
             sig.bind(*args, **kwargs)
         except TypeError as e:
-            print(faker_function)
-
-            raise f"Invalid arguments. Expected signature: {sig}, got args={args}, \
-            kwargs={kwargs}. Error: {e}" from e
-
+            raise TypeError(
+                f"Invalid arguments. Expected signature: {sig}; got args={args}, kwargs={kwargs}."
+            ) from e
         if used_unique_values is not None:
             return self._generate_unique(faker_function, args, kwargs, used_unique_values)
         else:
@@ -128,7 +126,7 @@ class Seed:
             for k, v in self.faker_kwargs.items()
         }
 
-        return resolved_args, resolved_kwargs
+        return tuple(resolved_args), resolved_kwargs
 
     def __repr__(self) -> str:
         dep_str = f", dependencies={self.dependencies}" if self.dependencies else ""

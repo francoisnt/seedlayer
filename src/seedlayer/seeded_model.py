@@ -128,6 +128,7 @@ class SeededModel:
         so it never materialises the full Cartesian product.
         * Works when FK target tables have unequal row counts.
         """
+
         # ── 1. Collect PK-FK metadata ──────────────────────────────────────────────
         primary_fk_columns = [
             col for col in self.columns.values() if col.primary_key and col.foreign_keys
@@ -141,7 +142,7 @@ class SeededModel:
         for col in primary_fk_columns:
             if len(col.foreign_keys) != 1:
                 raise ValueError(
-                    f"Column '{col.name}' in model '{self.__name__}' has "
+                    f"Column '{col.name}' in model '{self.name}' has "
                     f"{len(col.foreign_keys)} foreign keys; expected exactly one."
                 )
             fk = next(iter(col.foreign_keys))

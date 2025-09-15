@@ -101,14 +101,13 @@ class SeedLayer:
                 self._session.refresh(obj, attribute_names=model.primary_keys)
 
     def __repr__(self):
-        # Simple printout for debugging
         return pformat(
             {
-                model_class.__name__: {
-                    "existing_ids": len(data.existing_ids),
-                    "new_ids": len(data.new_ids),
-                    "unique_values": {k: len(v) for k, v in data["unique_values"].items()},
+                name: {
+                    "existing_ids": len(model.existing_ids),
+                    "new_ids": len(model.new_ids),
+                    "unique_values": {k: len(v) for k, v in model.unique_values.items()},
                 }
-                for model_class, data in self.models.items()
+                for name, model in self.models.items()
             }
         )

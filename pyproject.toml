@@ -13,7 +13,9 @@ dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
 dev = [
   "pytest>=8.4.1",
   "pytest-cov==6.2.1",
-  "ruff==0.12.10"
+  "ruff==0.12.10",
+  "sqlalchemy2-stubs>=0.0.2a38",
+  "ty>=0.0.1a20",
 ]
 
 [build-system]
