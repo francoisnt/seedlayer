@@ -1,6 +1,6 @@
 import pytest
 
-from seedlayer.seedlayer import DependencyGraph
+from seedlayer.dependency_graph import DependencyGraph
 
 
 @pytest.fixture
