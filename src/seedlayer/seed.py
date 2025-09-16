@@ -1,14 +1,6 @@
 import enum
 import inspect
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Mapping,
-    Sequence,
-    Set,
-    Tuple,
-)
+from typing import Any, Callable, Dict, Mapping, Sequence, Set, Tuple
 
 from faker import Faker
 
@@ -33,14 +25,14 @@ class Seed:
         self,
         faker_provider: str,
         faker_args: FakerArgs = (),
-        faker_kwargs: FakerKwargs = None,
-    ):
+        faker_kwargs: FakerKwargs | None = None,
+    ) -> None:
         if faker_kwargs is None:
             faker_kwargs = {}
         self.provider = faker_provider
         self.dependencies: Set[str] = set()  # Track ColumnReference column names
         self.faker_args = faker_args
-        self.faker_kwargs = faker_kwargs
+        self.faker_kwargs: FakerKwargs = faker_kwargs
 
         # Collect dependencies from ColumnReference instances in args and kwargs
         for arg in faker_args:

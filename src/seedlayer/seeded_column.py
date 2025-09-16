@@ -1,24 +1,37 @@
-from typing import (
-    Any,
-    Set,
-)
+from typing import Any, TYPE_CHECKING, Set
 
 from faker import Faker
 from sqlalchemy import Column
+from sqlalchemy.sql.type_api import TypeEngine
 
 from .seed import Seed
+from .types import SeededColumnContext
+
+if TYPE_CHECKING:
+    from sqlalchemy import Column as SQLAlchemyColumn
+    ColumnBase = SQLAlchemyColumn[Any]
+else:  # pragma: no cover - runtime behaviour only
+    ColumnBase = Column
 
 
 class SeededColumnMixin:
     """Adds `seed` and `generate()` behaviour."""
 
+    seed: Seed | None
+    nullable: bool | None
+    name: str
+    type: TypeEngine[Any]
+    primary_key: bool
+    autoincrement: Any
+    server_default: Any
+
     def __init__(
         self,
-        *args,
+        *args: Any,
         seed: Seed | str | None = None,
         nullable_chance: int = 20,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         # Allow    Integer   → Integer()
         if args and isinstance(args[0], type):
             args = (args[0](), *args[1:])
@@ -38,11 +51,14 @@ class SeededColumnMixin:
     def generate(
         self,
         faker: Faker,
-        column_context: dict | None = None,
+        column_context: SeededColumnContext | None = None,
         used_unique_values: Set[Any] | None = None,
-    ):
+    ) -> Any | None:
         if self.nullable and faker.random_int(min=1, max=100) <= self.nullable_chance:
             return None
+
+        if self.seed is None:
+            raise ValueError("SeededColumn requires a Seed to generate values")
 
         return self.seed.generate(
             column_context=column_context,
@@ -61,5 +77,5 @@ class SeededColumnMixin:
 
 
 # Custom Column class
-class SeededColumn(SeededColumnMixin, Column):
+class SeededColumn(SeededColumnMixin, ColumnBase):
     inherit_cache = True  # 🚀 enable SQL compilation caching

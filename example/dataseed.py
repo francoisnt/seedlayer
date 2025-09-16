@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from seedlayer import SeedLayer
+from seedlayer.types import SeedPlan
 
 from .models import Base, Category, Customer, Order, OrderItem, Product
 
@@ -16,7 +17,7 @@ Base.metadata.create_all(engine)
 
 
 class CustomCommerceProvider(BaseProvider):
-    def product_name(self):
+    def product_name(self) -> str:
         adjectives = ["Awesome", "Practical", "Sleek", "Amazing", "Ergonomic", "Gorgeous", "Gold"]
         sizes = ["Little", "Small", "Medium", "Regular", "Large", "Big", "Extra Large", "Jumbo"]
         colors = ["Red", "Blue", "Green", "Yellow", "White", "Silver"]
@@ -32,7 +33,7 @@ class CustomCommerceProvider(BaseProvider):
 
 
 # Define seed plan:
-seed_plan = {
+seed_plan: SeedPlan = {
     Category: 700,
     Product: 700,
     Customer: 700,

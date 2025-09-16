@@ -1,22 +1,16 @@
-from collections import namedtuple
+from collections.abc import Iterable, Mapping
 from itertools import islice, product
 from random import shuffle
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    NamedTuple,
-    Self,
-    Set,
-)
+from typing import Any, Dict, Set, cast
 
 from faker import Faker
 from sqlalchemy import Column
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.schema import Table
 
 from .constants import TYPE_DEFAULTS, TypeDefaults
 from .dependency_graph import DependencyGraph
-from .primary_keys import PK, PrimaryKeys
+from .primary_keys import PrimaryKeys
 from .seed import Seed
 from .seeded_column import SeededColumnMixin
 from .types import SeedPlan, UniqueValues
@@ -25,27 +19,34 @@ from .types import SeedPlan, UniqueValues
 class SeededModel:
     def __init__(
         self,
-        model: DeclarativeBase,
+        model: type[Any],
         nb_of_rows_to_seed: int,
         session: Session,
         seed_plan: SeedPlan,
     ) -> None:
         self.is_link_table = False
-        self.table = model.__table__
-        self.base_model = model
+        table = getattr(model, "__table__", None)
+        if table is None:
+            raise ValueError(f"Model {model.__name__} has no __table__ attribute")
+        self.table = cast(Table, table)
+        self.base_model: type[Any] = model
         self.nb_of_rows_to_seed = nb_of_rows_to_seed
         self.name = model.__name__
         self.foreign_key_dependencies: Set[str] = set()
-        self.columns = {col.name: col for col in self.table.columns}
-        self.primary_keys = [col.name for col in self.table.primary_key.columns]
-        self.unique_columns = [col.name for col in self.table.columns if col.unique]
-        self.existing_ids = PrimaryKeys[PK](self.primary_keys)
-        self.new_ids = PrimaryKeys[PK](self.primary_keys)
+        self.columns: Dict[str, Column[Any]] = {col.name: col for col in self.table.columns}
+        self.primary_keys: tuple[str, ...] = tuple(
+            col.name for col in self.table.primary_key.columns
+        )
+        self.unique_columns: tuple[str, ...] = tuple(
+            col.name for col in self.table.columns if col.unique
+        )
+        self.existing_ids: PrimaryKeys[Any] = PrimaryKeys(self.primary_keys)
+        self.new_ids: PrimaryKeys[Any] = PrimaryKeys(self.primary_keys)
 
         dependency_graph = DependencyGraph()
-        primary_foreign_keys = []
+        primary_foreign_keys: list[str] = []
 
-        for column in model.__table__.columns:
+        for column in self.table.columns:
             if column.primary_key and column.foreign_keys:
                 primary_foreign_keys.append(column.name)
 
@@ -98,7 +99,7 @@ class SeededModel:
         id_target = self.new_ids if new_data else self.existing_ids
         for row in query:
             # Extract primary key values from model instances or Row objects
-            pk_values = []
+            pk_values: list[Any] = []
             for name in self.primary_keys:
                 # Try getattr for model instances, then _mapping for Row objects
                 value = getattr(row, name, None)
@@ -108,8 +109,8 @@ class SeededModel:
                     raise ValueError(f"Missing primary key field '{name}' in row: {row}")
                 pk_values.append(value)
 
-            pk_values = tuple(pk_values)
-            id_target.add(pk_values)
+            pk_tuple = tuple(pk_values)
+            id_target.add(pk_tuple)
 
             # Handle unique columns
             for col_name in self.unique_columns:
@@ -119,7 +120,9 @@ class SeededModel:
                 if value is not None:
                     self.unique_values[col_name].add(value)
 
-    def get_fk_combinations(self, models: Dict[str, "SeededModel"], n: int) -> list[NamedTuple]:
+    def get_fk_combinations(
+        self, models: Mapping[str, "SeededModel"], n: int
+    ) -> list[Dict[str, Any]]:
         """Return up to *n* deterministic FK‐value combinations.
 
         * Correct mapping: field order is driven by ``fk_targets``.
@@ -154,7 +157,7 @@ class SeededModel:
             if not pk_data:
                 raise ValueError(f"No new IDs for FK '{col.name}' -> '{target_table.name}'")
 
-            ids = [getattr(pk, target_field) for pk in pk_data]
+            ids = [pk[target_field] for pk in pk_data.dicts()]
             if not ids:
                 raise ValueError(f"No '{target_field}' values found in '{target_table.name}'")
 
@@ -169,18 +172,19 @@ class SeededModel:
             raise ValueError(f"Requested {n} combos, but only {max_combos} possible.")
 
         # ── 3. Build the iterator and slice lazily ─────────────────────────────────
-        FKCombination = namedtuple("FKCombination", fk_targets)
-        combo_iter = (FKCombination(*combo) for combo in product(*value_lists))
+        combo_iter = (
+            dict(zip(fk_targets, combo, strict=True)) for combo in product(*value_lists)
+        )
 
         return list(islice(combo_iter, n))
 
     def table_to_model(
         self,
-        column: Column,
-        table: Any,  # Table type from SQLAlchemy, or use Table if imported
-        models: Dict[str, "SeededModel"],
+        column: Any,
+        table: Table,
+        models: Mapping[str, "SeededModel"],
     ) -> "SeededModel":
-        target_model: "SeededModel" = None
+        target_model: "SeededModel" | None = None
         for model in models.values():
             if model.table == table:
                 target_model = model
@@ -194,11 +198,11 @@ class SeededModel:
     def fake_column(
         self,
         col_name: str,
-        models: Dict[str, "SeededModel"],
+        models: Mapping[str, "SeededModel"],
         faker: Faker,
         type_defaults: TypeDefaults,
         column_context: Dict[str, Any],
-        pfk_combo: Any = None,  # NamedTuple or None
+        pfk_combo: Mapping[str, Any] | None = None,
     ) -> Any:
         column = self.columns[col_name]
 
@@ -209,19 +213,17 @@ class SeededModel:
         # Handle Primary keys that are also foreign keys, must use valid combination
         if column.foreign_keys and column.primary_key:
             if pfk_combo is None:
-                raise (
-                    f"No combination of foreign key profided for \
-                    column {column} in model {self.name}"
+                raise ValueError(
+                    f"No combination of foreign keys provided for column {column} "
+                    f"in model {self.name}"
                 )
 
-            if col_name not in pfk_combo._fields:
+            if col_name not in pfk_combo:
                 raise ValueError(
                     f"Field '{col_name}' not found in primary key combination : {pfk_combo}"
                 )
 
-            # fk = next(iter(column.foreign_keys))
-            # target_table = fk.column.table
-            return getattr(pfk_combo, col_name)
+            return pfk_combo[col_name]
 
         if column.foreign_keys:
             # For now: assume single FK per column
@@ -230,9 +232,9 @@ class SeededModel:
             target_model = self.table_to_model(column, target_table, models)
 
             # Pick random ID from models and extract the scalar value
-            pk_tuple = models[target_model.name].new_ids.get_random()
+            pk_mapping = models[target_model.name].new_ids.get_random()
             target_field = fk.column.name  # The referenced column name (e.g., 'id')
-            return getattr(pk_tuple, target_field)  # Extract the scalar value
+            return pk_mapping[target_field]
 
             # Pick random ID from models
             # return models[target_model.name].new_ids.get_random()
@@ -260,8 +262,11 @@ class SeededModel:
                     used_unique_values=used_unique_values,
                 )
 
-        if column.default:
-            return column.default.arg()
+        if column.default is not None:
+            default_arg = getattr(column.default, "arg", None)
+            if callable(default_arg):
+                return default_arg()
+            return default_arg
 
         if column.server_default:
             return None
@@ -276,13 +281,13 @@ class SeededModel:
 
     def fake_row(
         self,
-        models: Dict[str, Self],
+        models: Mapping[str, "SeededModel"],
         faker: Faker,
         type_defaults: TypeDefaults,
-        pfk_combo: NamedTuple = None,
-    ):
-        column_context = {}
-        row = {}
+        pfk_combo: Mapping[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        column_context: Dict[str, Any] = {}
+        row: Dict[str, Any] = {}
 
         for col_name in self.columns_seed_order:
             value = self.fake_column(
@@ -300,7 +305,13 @@ class SeededModel:
 
         return row
 
-    def fake_rows(self, n: int, models: Dict[str, Self], faker: Faker, type_defaults: TypeDefaults):
+    def fake_rows(
+        self,
+        n: int,
+        models: Mapping[str, "SeededModel"],
+        faker: Faker,
+        type_defaults: TypeDefaults,
+    ) -> list[Dict[str, Any]]:
         if self.is_link_table:
             pfk_possible_combinations = self.get_fk_combinations(models, n)
 
