@@ -8,7 +8,6 @@ from typing import (
     NamedTuple,
     Self,
     Set,
-    Type,
 )
 
 from faker import Faker
@@ -26,7 +25,7 @@ from .types import SeedPlan, UniqueValues
 class SeededModel:
     def __init__(
         self,
-        model: Type[DeclarativeBase],
+        model: DeclarativeBase,
         nb_of_rows_to_seed: int,
         session: Session,
         seed_plan: SeedPlan,

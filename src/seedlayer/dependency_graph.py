@@ -2,15 +2,19 @@ from collections import deque
 from typing import (
     Dict,
     List,
+    Optional,
     Set,
+    TypeAlias,
 )
+
+GraphType: TypeAlias = Dict[str, Set[str]]
 
 
 class DependencyGraph:
-    def __init__(self):
-        self._graph: Dict[str, Set[str]] = {}
+    def __init__(self) -> None:
+        self._graph: GraphType = {}
 
-    def add(self, node: str, dependencies: Set[str] = None):
+    def add(self, node: str, dependencies: Optional[Set[str]] = None) -> None:
         """Add a node with its dependencies."""
         if dependencies is None:
             dependencies = set()
@@ -30,7 +34,7 @@ class DependencyGraph:
 
         # 2. Compute reverse edges & incoming-edge counts
         incoming = {n: 0 for n in all_nodes}
-        reverse = {n: set() for n in all_nodes}
+        reverse: GraphType = {n: set() for n in all_nodes}
         for node, deps in graph.items():
             for d in deps:
                 reverse[d].add(node)
@@ -54,5 +58,5 @@ class DependencyGraph:
 
         return order
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"DependencyGraph({self._graph})"

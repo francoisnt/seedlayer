@@ -70,7 +70,7 @@ class SeedLayer:
         if seed is not None:
             self.faker.seed_instance(seed)
 
-    def seed(self):
+    def seed(self) -> None:
         """Seed all models in seed_plan dict into the DB, respecting FK dependencies."""
 
         logger.info(f"Model seeding order: {[m for m in self.model_seed_order]}")
@@ -100,7 +100,7 @@ class SeedLayer:
             for obj in objects:
                 self._session.refresh(obj, attribute_names=model.primary_keys)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return pformat(
             {
                 name: {
