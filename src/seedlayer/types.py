@@ -1,14 +1,10 @@
-from collections import namedtuple
 from collections.abc import Hashable
-from typing import Any, Dict, Set, Tuple, TypeVar
-
-from sqlalchemy.orm import DeclarativeBase
+from typing import Any, Dict, Mapping, Set, TypeVar
 
 SeededColumnContext = Dict[str, Any]
 
-SeedPlan = Dict[DeclarativeBase, int]
+SeedPlan = Mapping[type[Any], int]
 
 PK = TypeVar("PK", bound=Hashable)
-Primary_Key = namedtuple
-Primary_Key_names = Tuple[str]
+Primary_Key_names = tuple[str, ...]
 UniqueValues = Dict[str, Set[Hashable]]
