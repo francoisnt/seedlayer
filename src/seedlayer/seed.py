@@ -21,12 +21,21 @@ FakerKwargs = Dict[str, FakerArg]
 
 
 class Seed:
+    """Represents a seed configuration for generating fake data using Faker."""
+
     def __init__(
         self,
         faker_provider: str,
         faker_args: FakerArgs = (),
         faker_kwargs: FakerKwargs | None = None,
     ) -> None:
+        """Initialize a Seed with faker provider and arguments.
+
+        Args:
+            faker_provider: The name of the Faker provider method.
+            faker_args: Arguments to pass to the Faker provider.
+            faker_kwargs: Keyword arguments to pass to the Faker provider.
+        """
         if faker_kwargs is None:
             faker_kwargs = {}
         self.provider = faker_provider

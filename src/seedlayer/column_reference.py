@@ -8,7 +8,15 @@ from .types import SeededColumnContext
 
 
 class ColumnReference:
+    """Represents a reference to a column with an optional transform function."""
+
     def __init__(self, colname: str, transform: Optional[Callable[[Any], Any]] = None):
+        """Initialize a ColumnReference.
+
+        Args:
+            colname: The name of the column to reference.
+            transform: An optional function to apply to the column value.
+        """
         self.colname = colname
         self.transform = transform
 
@@ -25,5 +33,6 @@ class ColumnReference:
         return value
 
     def __repr__(self) -> str:
+        """Return a string representation of the ColumnReference."""
         tf = f", transform={self.transform}" if self.transform else ""
         return f"ColumnReference('{self.colname}'{tf})"

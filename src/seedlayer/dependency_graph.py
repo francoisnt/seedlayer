@@ -11,7 +11,10 @@ GraphType: TypeAlias = Dict[str, Set[str]]
 
 
 class DependencyGraph:
+    """Represents a directed graph for tracking dependencies."""
+
     def __init__(self) -> None:
+        """Initialize an empty DependencyGraph."""
         self._graph: GraphType = {}
 
     def add(self, node: str, dependencies: Optional[Set[str]] = None) -> None:
@@ -24,6 +27,7 @@ class DependencyGraph:
         self._graph[node].update(dependencies)
 
     def topological_sort(self) -> List[str]:
+        """Return a list of nodes in topological order using Kahn's algorithm."""
         graph = self._graph
 
         # 1. Ensure every dependency also appears as a key
@@ -59,4 +63,5 @@ class DependencyGraph:
         return order
 
     def __repr__(self) -> str:
+        """Return a string representation of the DependencyGraph."""
         return f"DependencyGraph({self._graph})"
