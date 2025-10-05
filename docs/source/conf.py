@@ -86,6 +86,7 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": False,
     "show-inheritance": True,
+    "ignore-module-all": True,  # fixes warning about ambiguous module when building docs
 }
 
 
