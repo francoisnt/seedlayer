@@ -107,4 +107,5 @@ def run_apidoc(app: Sphinx) -> None:
 
 
 def setup(app: Sphinx) -> None:
+    """Register the apidoc generation for the builder-inited event."""
     app.connect("builder-inited", run_apidoc)

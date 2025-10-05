@@ -13,6 +13,7 @@ from git import Repo
 
 
 def main() -> None:
+    """Find the repository, clean the API docs directory, and build Sphinx HTML documentation."""
     # Find repo root
     try:
         repo = Repo(Path.cwd(), search_parent_directories=True)
@@ -24,6 +25,7 @@ def main() -> None:
 
     docs_root = Path(repo.working_tree_dir) / "docs"
 
+    # Define paths
     src = docs_root / "source"
     build = docs_root / "build"
     api = src / "api"

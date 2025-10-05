@@ -17,6 +17,8 @@ from .types import SeedPlan, UniqueValues
 
 
 class SeededModel:
+    """Container class for managing data seeding on a specific SQLAlchemy model."""
+
     def __init__(
         self,
         model: type[Any],
@@ -24,6 +26,7 @@ class SeededModel:
         session: Session,
         seed_plan: SeedPlan,
     ) -> None:
+        """Initialize the SeededModel with model details and seeding plan."""
         self.is_link_table = False
         table = getattr(model, "__table__", None)
         if table is None:
@@ -182,6 +185,7 @@ class SeededModel:
         table: Table,
         models: Mapping[str, "SeededModel"],
     ) -> "SeededModel":
+        """Find the SeededModel corresponding to a given table."""
         target_model: SeededModel | None = None
         for model in models.values():
             if model.table == table:
@@ -202,6 +206,7 @@ class SeededModel:
         column_context: dict[str, Any],
         pfk_combo: Mapping[str, Any] | None = None,
     ) -> Any:
+        """Generate a fake value for the specified column based on its type and constraints."""
         column = self.columns[col_name]
 
         # Skip autoincrement PKs
@@ -284,6 +289,7 @@ class SeededModel:
         type_defaults: TypeDefaults,
         pfk_combo: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        """Generate a fake row dictionary for the model."""
         column_context: dict[str, Any] = {}
         row: dict[str, Any] = {}
 
@@ -310,6 +316,7 @@ class SeededModel:
         faker: Faker,
         type_defaults: TypeDefaults,
     ) -> list[dict[str, Any]]:
+        """Generate a list of n fake row dictionaries for the model."""
         if self.is_link_table:
             pfk_possible_combinations = self.get_fk_combinations(models, n)
 

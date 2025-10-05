@@ -57,6 +57,7 @@ class Seed:
             raise ValueError("Seed must have a faker_provider")
 
     def has_dependencies(self) -> bool:
+        """Check if this Seed has any column dependencies."""
         return bool(self.dependencies)
 
     @staticmethod
@@ -80,6 +81,16 @@ class Seed:
         column_context: SeededColumnContext | None = None,
         used_unique_values: set[Any] | None = None,
     ) -> Any:
+        """Generate fake data using the specified Faker provider.
+
+        Args:
+            faker: The Faker instance to use for data generation.
+            column_context: Context of column values for resolving dependencies.
+            used_unique_values: Set of values already used, for uniqueness.
+
+        Returns:
+            The generated fake data value.
+        """
         # Validate that faker_provider exists
         if not hasattr(faker, self.provider):
             raise ValueError(f"Faker has no provider '{self.provider}'")
@@ -129,5 +140,6 @@ class Seed:
         return tuple(resolved_args), resolved_kwargs
 
     def __repr__(self) -> str:
+        """Return a string representation of the Seed."""
         dep_str = f", dependencies={self.dependencies}" if self.dependencies else ""
         return f"Seed(provider={self.provider}{dep_str})"

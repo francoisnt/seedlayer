@@ -63,6 +63,16 @@ class SeededColumnMixin:
         column_context: SeededColumnContext | None = None,
         used_unique_values: set[Any] | None = None,
     ) -> Any | None:
+        """Generate a value for the column using the seed.
+
+        Args:
+            faker: The Faker instance for data generation.
+            column_context: Context of previously generated column values.
+            used_unique_values: Set of values already used for uniqueness.
+
+        Returns:
+            The generated value, or None if nullable and chance triggers.
+        """
         if self.nullable and faker.random_int(min=1, max=100) <= self.nullable_chance:
             return None
 
@@ -77,6 +87,7 @@ class SeededColumnMixin:
 
     # Nice repr so SQLAlchemy debug prints stay readable
     def __repr__(self) -> str:  # pragma: no cover
+        """Return a readable string representation of the SeededColumnMixin."""
         return (
             f"SeededColumn({self.name or '<unnamed>'}, "
             f"type={self.type}, nullable={self.nullable}, "
@@ -87,4 +98,6 @@ class SeededColumnMixin:
 
 # Custom Column class
 class SeededColumn(SeededColumnMixin, ColumnBase):
+    """Custom SQLAlchemy Column class with seeding capabilities."""
+
     inherit_cache = True  # 🚀 enable SQL compilation caching

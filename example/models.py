@@ -15,6 +15,8 @@ Base = declarative_base()
 
 
 class Category(Base):
+    """Represents a category table record."""
+
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = SeededColumn(String, seed=Seed("sentence", faker_kwargs={"nb_words": 2}), unique=True)
@@ -22,6 +24,8 @@ class Category(Base):
 
 
 class Product(Base):
+    """Represents a product table record."""
+
     __tablename__ = "products"
     id = SeededColumn(Integer, primary_key=True, autoincrement=True)
     category_id = SeededColumn(Integer, ForeignKey("categories.id"), seed=None)
@@ -35,6 +39,8 @@ class Product(Base):
 
 
 class Customer(Base):
+    """Represents a customer table record."""
+
     __tablename__ = "customers"
     id = SeededColumn(Integer, primary_key=True, autoincrement=True)
     first_name = SeededColumn(String, seed=Seed("first_name"))
@@ -44,6 +50,8 @@ class Customer(Base):
 
 
 class Order(Base):
+    """Represents an order table record."""
+
     __tablename__ = "orders"
     id = SeededColumn(Integer, primary_key=True, autoincrement=True)
     customer_id = SeededColumn(Integer, ForeignKey("customers.id"), seed=None)
@@ -57,6 +65,8 @@ class Order(Base):
 
 
 class OrderItem(Base):
+    """Represents an order item table record."""
+
     __tablename__ = "order_items"
     order_id = SeededColumn(Integer, ForeignKey("orders.id"), primary_key=True, seed=None)
     product_id = SeededColumn(Integer, ForeignKey("products.id"), primary_key=True, seed=None)

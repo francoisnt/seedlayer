@@ -17,7 +17,10 @@ Base.metadata.create_all(engine)
 
 
 class CustomCommerceProvider(BaseProvider):
+    """Custom Faker provider for generating product names."""
+
     def product_name(self) -> str:
+        """Generate a random product name."""
         adjectives = ["Awesome", "Practical", "Sleek", "Amazing", "Ergonomic", "Gorgeous", "Gold"]
         sizes = ["Little", "Small", "Medium", "Regular", "Large", "Big", "Extra Large", "Jumbo"]
         colors = ["Red", "Blue", "Green", "Yellow", "White", "Silver"]
