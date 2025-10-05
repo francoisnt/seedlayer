@@ -81,7 +81,7 @@ autodoc_mock_imports = ["sqlalchemy", "faker"]
 
 # Autosummary/Autodoc settings
 autosummary_generate = True
-autodoc_typehints = "description"  # render hints in the body, cleaner sigs
+autodoc_typehints = "both"  # render hints in the signature and body
 autodoc_default_options = {
     "members": True,
     "undoc-members": False,
