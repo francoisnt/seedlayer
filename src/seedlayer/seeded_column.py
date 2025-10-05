@@ -37,7 +37,7 @@ class SeededColumnMixin:
 
         Args:
             *args: Positional arguments passed to the parent class.
-            seed: A Seed instance or string provider name for data generation.
+            seed: A :class:`~seedlayer.seed.Seed` instance or string provider name for data generation.
             nullable_chance: Percentage chance of generating None values (0-100).
             **kwargs: Keyword arguments passed to the parent class.
         """
