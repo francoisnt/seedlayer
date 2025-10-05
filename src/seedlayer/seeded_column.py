@@ -1,4 +1,4 @@
-from typing import Any, TYPE_CHECKING, Set
+from typing import TYPE_CHECKING, Any
 
 from faker import Faker
 from sqlalchemy import Column
@@ -9,13 +9,14 @@ from .types import SeededColumnContext
 
 if TYPE_CHECKING:
     from sqlalchemy import Column as SQLAlchemyColumn
+
     ColumnBase = SQLAlchemyColumn[Any]
 else:  # pragma: no cover - runtime behaviour only
     ColumnBase = Column
 
 
 class SeededColumnMixin:
-    """Adds `seed` and `generate()` behaviour."""
+    """Mixin to add seeding capabilities for generating fake data in SQLAlchemy columns."""
 
     seed: Seed | None
     nullable: bool | None
@@ -32,6 +33,14 @@ class SeededColumnMixin:
         nullable_chance: int = 20,
         **kwargs: Any,
     ) -> None:
+        """Initialize the SeededColumnMixin.
+
+        Args:
+            *args: Positional arguments passed to the parent class.
+            seed: A Seed instance or string provider name for data generation.
+            nullable_chance: Percentage chance of generating None values (0-100).
+            **kwargs: Keyword arguments passed to the parent class.
+        """
         # Allow    Integer   → Integer()
         if args and isinstance(args[0], type):
             args = (args[0](), *args[1:])
@@ -52,7 +61,7 @@ class SeededColumnMixin:
         self,
         faker: Faker,
         column_context: SeededColumnContext | None = None,
-        used_unique_values: Set[Any] | None = None,
+        used_unique_values: set[Any] | None = None,
     ) -> Any | None:
         if self.nullable and faker.random_int(min=1, max=100) <= self.nullable_chance:
             return None
@@ -66,7 +75,7 @@ class SeededColumnMixin:
             used_unique_values=used_unique_values,
         )
 
-    # Nice repr so SQLAlchemy debug‐prints stay readable
+    # Nice repr so SQLAlchemy debug prints stay readable
     def __repr__(self) -> str:  # pragma: no cover
         return (
             f"SeededColumn({self.name or '<unnamed>'}, "

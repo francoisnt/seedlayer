@@ -1,6 +1,5 @@
 import logging
 from pprint import pformat
-from typing import Dict, Optional
 
 from faker import Faker
 from sqlalchemy import select
@@ -19,6 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 class SeedLayer:
+    """SeedLayer facilitates seeding database models with fake data.
+
+    This class manages the process of populating SQLAlchemy models with generated
+    fake data based on a provided seed plan. It handles model dependencies for proper
+    insertion order, supports batching for performance, and integrates with the Faker
+    library for realistic data generation.
+    """
+
     def __init__(
         self,
         session: Session,
@@ -26,6 +33,14 @@ class SeedLayer:
         type_defaults: TypeDefaults = TYPE_DEFAULTS,
         batch_size: int = 1000,  # Configurable batch size
     ):
+        """Initialize the SeedLayer instance.
+
+        Args:
+            session: SQLAlchemy session for database operations.
+            seed_plan: Dictionary mapping model classes to number of rows to seed.
+            type_defaults: Custom type defaults to override TYPE_DEFAULTS.
+            batch_size: Number of rows to process in each batch. Defaults to 1000.
+        """
         if seed_plan is None:
             raise ValueError("seed_plan is missing")
         if batch_size < 1:
@@ -36,7 +51,7 @@ class SeedLayer:
         self._model_dependency_graph: DependencyGraph = DependencyGraph()
         self._seed_plan: SeedPlan = seed_plan
         self._batch_size: int = batch_size
-        self.models: Dict[str, SeededModel] = {}
+        self.models: dict[str, SeededModel] = {}
         for model_class, nb_of_rows_to_seed in seed_plan.items():
             model = SeededModel(model_class, nb_of_rows_to_seed, session, seed_plan)
             self._model_dependency_graph.add(
@@ -49,10 +64,16 @@ class SeedLayer:
         self.model_seed_order = self._model_dependency_graph.topological_sort()
 
     def add_faker_provider(self, provider: type) -> None:
+        """Add a Faker provider to the shared Faker instance.
+
+        Args:
+            provider: The Faker provider class to add.
+        """
         self.faker.add_provider(provider)
 
-    def configure_faker(self, seed: Optional[int] = None, locale: Optional[str] = None) -> None:
+    def configure_faker(self, seed: int | None = None, locale: str | None = None) -> None:
         """Configure the shared Faker instance.
+
         Args:
             seed: Seed for reproducible results (optional).
             locale: Locale for the Faker instance, e.g., 'en_US' (optional).
@@ -66,9 +87,14 @@ class SeedLayer:
             self.faker.seed_instance(seed)
 
     def seed(self, single_transaction: bool = False) -> None:
-        """Seed all models in seed_plan dict into the DB, respecting FK dependencies.
+        """Seed the models in the seed plan.
+
+        This method executes the seeding process for all configured models,
+        generating and inserting fake data according to the seed plan.
+
         Args:
-            single_transaction: If True, wrap all seeding in a single transaction.
+            single_transaction: Whether to wrap all seeding operations in a
+                single database transaction. Defaults to False.
         """
         logger.info(f"Model seeding order: {[m for m in self.model_seed_order]}")
         if single_transaction:
@@ -125,6 +151,7 @@ class SeedLayer:
                 self._session.commit()
 
     def __repr__(self) -> str:
+        """Return a string representation of the SeedLayer instance."""
         return pformat(
             {
                 name: {

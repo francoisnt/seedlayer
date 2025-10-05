@@ -1,7 +1,6 @@
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
-    Optional,
 )
 
 from .types import SeededColumnContext
@@ -10,7 +9,7 @@ from .types import SeededColumnContext
 class ColumnReference:
     """Represents a reference to a column with an optional transform function."""
 
-    def __init__(self, colname: str, transform: Optional[Callable[[Any], Any]] = None):
+    def __init__(self, colname: str, transform: Callable[[Any], Any] | None = None):
         """Initialize a ColumnReference.
 
         Args:

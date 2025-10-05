@@ -1,13 +1,9 @@
 from collections import deque
 from typing import (
-    Dict,
-    List,
-    Optional,
-    Set,
     TypeAlias,
 )
 
-GraphType: TypeAlias = Dict[str, Set[str]]
+GraphType: TypeAlias = dict[str, set[str]]
 
 
 class DependencyGraph:
@@ -17,7 +13,7 @@ class DependencyGraph:
         """Initialize an empty DependencyGraph."""
         self._graph: GraphType = {}
 
-    def add(self, node: str, dependencies: Optional[Set[str]] = None) -> None:
+    def add(self, node: str, dependencies: set[str] | None = None) -> None:
         """Add a node with its dependencies."""
         if dependencies is None:
             dependencies = set()
@@ -26,7 +22,7 @@ class DependencyGraph:
 
         self._graph[node].update(dependencies)
 
-    def topological_sort(self) -> List[str]:
+    def topological_sort(self) -> list[str]:
         """Return a list of nodes in topological order using Kahn's algorithm."""
         graph = self._graph
 
@@ -44,9 +40,9 @@ class DependencyGraph:
                 reverse[d].add(node)
                 incoming[node] += 1
 
-        # 3. Kahn’s algorithm
+        # 3. Kahn's algorithm
         queue = deque(n for n, deg in incoming.items() if deg == 0)
-        order: List[str] = []
+        order: list[str] = []
 
         while queue:
             n = queue.popleft()

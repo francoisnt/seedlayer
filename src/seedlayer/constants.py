@@ -1,11 +1,11 @@
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy import UUID, Boolean, DateTime, Float, Integer, String, Text
 from sqlalchemy.types import TypeEngine
 
 from .seed import Seed
 
-TypeDefaults = Dict[type[TypeEngine[Any]], str | Seed]
+TypeDefaults = dict[type[TypeEngine[Any]], str | Seed]
 
 TYPE_DEFAULTS: TypeDefaults = {
     Integer: Seed(faker_provider="random_int", faker_kwargs={"min": 0, "max": 1000000}),

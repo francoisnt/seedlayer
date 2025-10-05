@@ -1,6 +1,6 @@
 import random
 from collections.abc import Hashable, Iterable, Iterator
-from typing import Dict, Generic
+from typing import Generic
 
 from .types import PK
 
@@ -64,7 +64,7 @@ class PrimaryKeys(Generic[PK]):
         """Iterate over the primary key tuples."""
         return iter(self._pks)
 
-    def _as_mapping(self, pk: tuple[PK, ...]) -> Dict[str, PK]:
+    def _as_mapping(self, pk: tuple[PK, ...]) -> dict[str, PK]:
         """Convert a primary key tuple to a dictionary mapping column names to values.
 
         Args:
@@ -75,16 +75,16 @@ class PrimaryKeys(Generic[PK]):
         """
         return dict(zip(self._names, pk, strict=True))
 
-    def dicts(self) -> Iterator[Dict[str, PK]]:
+    def dicts(self) -> Iterator[dict[str, PK]]:
         """Yield dictionaries mapping column names to values for each primary key."""
         for pk in self._pks:
             yield self._as_mapping(pk)
 
-    def get_random(self) -> Dict[str, PK]:
+    def get_random(self) -> dict[str, PK]:
         """Return a random primary key as a mapping of column name to value."""
         if not self._pks:
             raise ValueError("No primary keys available")
-        return self._as_mapping(random.choice(tuple(self._pks)))
+        return self._as_mapping(random.choice(tuple(self._pks)))  # noqa: S311
 
     def __len__(self) -> int:
         """Return the number of primary keys stored."""

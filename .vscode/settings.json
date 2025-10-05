@@ -4,8 +4,8 @@
       "editor.formatOnSave": true,
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.codeActionsOnSave": {
-         "source.fixAll": "explicit", // lint autofixes (optional)
-         "source.organizeImports": "explicit" // import sort/dedupe (optional)
+         "source.fixAll": "always", // lint autofixes (optional)
+         "source.organizeImports": "always" // import sort/dedupe (optional)
       }
    },
    "python.testing.pytestArgs": [
@@ -16,4 +16,7 @@
    "python.defaultInterpreterPath": ".venv/bin/python",
    // Mypy
    "mypy-type-checker.importStrategy": "fromEnvironment",
+   "ruff.configurationPreference": "filesystemFirst",
+   "ruff.format.backend": "uv",
+
 }

@@ -9,12 +9,25 @@ authors = [
 ]
 dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
 
+[project.scripts]
+docs = "scripts.docs:main"
+
 [dependency-groups]
 dev = [
+  "furo>=2025.9.25",
+  "gitpython>=3.1.45",
   "mypy>=1.18.1",
+  "myst-parser>=4.0.1",
   "pytest>=8.4.1",
   "pytest-cov==6.2.1",
   "ruff==0.12.10",
+  "sphinx>=8",
+  "sphinx-autodoc-typehints>=3.2.0",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.6.1",
+  "sphinx-rtd-theme>=3.0.2",
+  "toml>=0.10.2",
+  "types-toml>=0.10.8.20240310",
 ]
 
 [build-system]
@@ -32,9 +45,16 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "I"]
-ignore = []
+select = ["E", "F", "B", "I", "D", "RUF", "UP", "S", "T10", "T20" ]
+ignore = ["D100", "D104"]
 extend-select = ["E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["S101"]
+
 
 [tool.uv.workspace]
 members = ["."]

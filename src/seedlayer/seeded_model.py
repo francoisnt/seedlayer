@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Mapping
 from itertools import islice, product
 from random import shuffle
-from typing import Any, Dict, Set, cast
+from typing import Any, cast
 
 from faker import Faker
 from sqlalchemy import Column
@@ -32,8 +32,8 @@ class SeededModel:
         self.base_model: type[Any] = model
         self.nb_of_rows_to_seed = nb_of_rows_to_seed
         self.name = model.__name__
-        self.foreign_key_dependencies: Set[str] = set()
-        self.columns: Dict[str, Column[Any]] = {col.name: col for col in self.table.columns}
+        self.foreign_key_dependencies: set[str] = set()
+        self.columns: dict[str, Column[Any]] = {col.name: col for col in self.table.columns}
         self.primary_keys: tuple[str, ...] = tuple(
             col.name for col in self.table.primary_key.columns
         )
@@ -122,15 +122,15 @@ class SeededModel:
 
     def get_fk_combinations(
         self, models: Mapping[str, "SeededModel"], n: int
-    ) -> list[Dict[str, Any]]:
-        """Return up to *n* deterministic FK‐value combinations.
+    ) -> list[dict[str, Any]]:
+        """Return up to *n* deterministic FK value combinations.
 
         * Correct mapping: field order is driven by ``fk_targets``.
         * Scalable: uses an iterator over ``itertools.product`` and stops at *n*,
-        so it never materialises the full Cartesian product.
+          so it never materialises the full Cartesian product.
         * Works when FK target tables have unequal row counts.
-        """
 
+        """
         # ── 1. Collect PK-FK metadata ──────────────────────────────────────────────
         primary_fk_columns = [
             col for col in self.columns.values() if col.primary_key and col.foreign_keys
@@ -172,9 +172,7 @@ class SeededModel:
             raise ValueError(f"Requested {n} combos, but only {max_combos} possible.")
 
         # ── 3. Build the iterator and slice lazily ─────────────────────────────────
-        combo_iter = (
-            dict(zip(fk_targets, combo, strict=True)) for combo in product(*value_lists)
-        )
+        combo_iter = (dict(zip(fk_targets, combo, strict=True)) for combo in product(*value_lists))
 
         return list(islice(combo_iter, n))
 
@@ -184,7 +182,7 @@ class SeededModel:
         table: Table,
         models: Mapping[str, "SeededModel"],
     ) -> "SeededModel":
-        target_model: "SeededModel" | None = None
+        target_model: SeededModel | None = None
         for model in models.values():
             if model.table == table:
                 target_model = model
@@ -201,7 +199,7 @@ class SeededModel:
         models: Mapping[str, "SeededModel"],
         faker: Faker,
         type_defaults: TypeDefaults,
-        column_context: Dict[str, Any],
+        column_context: dict[str, Any],
         pfk_combo: Mapping[str, Any] | None = None,
     ) -> Any:
         column = self.columns[col_name]
@@ -285,9 +283,9 @@ class SeededModel:
         faker: Faker,
         type_defaults: TypeDefaults,
         pfk_combo: Mapping[str, Any] | None = None,
-    ) -> Dict[str, Any]:
-        column_context: Dict[str, Any] = {}
-        row: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        column_context: dict[str, Any] = {}
+        row: dict[str, Any] = {}
 
         for col_name in self.columns_seed_order:
             value = self.fake_column(
@@ -311,7 +309,7 @@ class SeededModel:
         models: Mapping[str, "SeededModel"],
         faker: Faker,
         type_defaults: TypeDefaults,
-    ) -> list[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         if self.is_link_table:
             pfk_possible_combinations = self.get_fk_combinations(models, n)
 

@@ -1,6 +1,7 @@
 import enum
 import inspect
-from typing import Any, Callable, Dict, Mapping, Sequence, Set, Tuple
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from faker import Faker
 
@@ -16,8 +17,8 @@ FakerComplexArg = (
 )
 
 FakerArg = ColumnReference | FakerComplexArg
-FakerArgs = Tuple[FakerArg, ...]
-FakerKwargs = Dict[str, FakerArg]
+FakerArgs = tuple[FakerArg, ...]
+FakerKwargs = dict[str, FakerArg]
 
 
 class Seed:
@@ -39,7 +40,7 @@ class Seed:
         if faker_kwargs is None:
             faker_kwargs = {}
         self.provider = faker_provider
-        self.dependencies: Set[str] = set()  # Track ColumnReference column names
+        self.dependencies: set[str] = set()  # Track ColumnReference column names
         self.faker_args = faker_args
         self.faker_kwargs: FakerKwargs = faker_kwargs
 
@@ -64,22 +65,20 @@ class Seed:
         faker_function: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: dict[Any, Any],
-        used_values: Set[Any],
+        used_values: set[Any],
         max_attempts: int = 100,
     ) -> Any:
         for _ in range(max_attempts):
             value = faker_function(*args, **kwargs)
             if value not in used_values:
                 return value
-        print(faker_function)
-        print("________________________________")
         raise RuntimeError(f"Could not generate unique value after {max_attempts} attempts")
 
     def generate(
         self,
         faker: Faker,
         column_context: SeededColumnContext | None = None,
-        used_unique_values: Set[Any] | None = None,
+        used_unique_values: set[Any] | None = None,
     ) -> Any:
         # Validate that faker_provider exists
         if not hasattr(faker, self.provider):
@@ -102,7 +101,7 @@ class Seed:
 
     def _resolve_args(
         self, column_context: SeededColumnContext | None
-    ) -> Tuple[FakerArgs, FakerKwargs]:
+    ) -> tuple[FakerArgs, FakerKwargs]:
         """Resolve faker arguments and keyword arguments based on column context."""
         if not self.has_dependencies():
             return self.faker_args, self.faker_kwargs

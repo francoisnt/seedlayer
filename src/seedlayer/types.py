@@ -1,10 +1,10 @@
-from collections.abc import Hashable
-from typing import Any, Dict, Mapping, Set, TypeVar
+from collections.abc import Hashable, Mapping
+from typing import Any, TypeVar
 
-SeededColumnContext = Dict[str, Any]
+SeededColumnContext = dict[str, Any]
 
 SeedPlan = Mapping[type[Any], int]
 
 PK = TypeVar("PK", bound=Hashable)
 Primary_Key_names = tuple[str, ...]
-UniqueValues = Dict[str, Set[Hashable]]
+UniqueValues = dict[str, set[Hashable]]
