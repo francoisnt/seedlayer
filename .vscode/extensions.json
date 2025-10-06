@@ -4,5 +4,7 @@
     "charliermarsh.ruff",
     "tamasfe.even-better-toml",
     "ms-python.mypy-type-checker",
+    "lextudio.restructuredtext",
+    "njpwerner.autodocstring",
   ]
 }
