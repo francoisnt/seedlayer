@@ -2,8 +2,8 @@ import logging
 from pprint import pformat
 
 from faker import Faker
-from sqlalchemy import Engine, select
-from sqlalchemy.orm import Session, class_mapper, sessionmaker
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from .constants import TYPE_DEFAULTS, TypeDefaults
 from .dependency_graph import DependencyGraph
@@ -104,7 +104,7 @@ class SeedLayer:
                 self._seed_models(session)
 
     def _seed_models(self, session: "Session") -> None:
-        """Internal method to seed models in batches using bulk_insert_mappings."""
+        """Internal method to seed models in batches using bulk_save_objects."""
         for model_name in self.model_seed_order:
             model = self.models[model_name]
             count = model.nb_of_rows_to_seed
@@ -124,23 +124,12 @@ class SeedLayer:
                     type_defaults=self.type_defaults,
                 )
 
-                # Use bulk_insert_mappings with the Mapper object
-                session.bulk_insert_mappings(class_mapper(model.base_model), fake_rows)
-                session.flush()
+                # Create objects from fake rows and bulk save with return defaults
+                objects = [model.base_model(**row) for row in fake_rows]
+                session.bulk_save_objects(objects, return_defaults=True)
 
-                # Query all rows for this model to update primary keys and unique values
-                query = (
-                    select(
-                        *[
-                            getattr(model.base_model, col)
-                            for col in model.primary_keys + model.unique_columns
-                        ]
-                    )
-                    .order_by(getattr(model.base_model, model.primary_keys[0]).desc())
-                    .limit(batch_count)
-                )
-                result = session.execute(query).all()
-                model._process_query_result(result, new_data=True)
+                # Process the objects to capture primary keys and unique values
+                model._process_query_result(objects, new_data=True)
 
                 remaining_rows -= batch_count
                 logger.debug(
