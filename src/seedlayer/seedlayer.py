@@ -2,8 +2,8 @@ import logging
 from pprint import pformat
 
 from faker import Faker
-from sqlalchemy import select
-from sqlalchemy.orm import Session, class_mapper
+from sqlalchemy import Engine, select
+from sqlalchemy.orm import Session, class_mapper, sessionmaker
 
 from .constants import TYPE_DEFAULTS, TypeDefaults
 from .dependency_graph import DependencyGraph
@@ -28,7 +28,7 @@ class SeedLayer:
 
     def __init__(
         self,
-        session: Session,
+        engine: "Engine",
         seed_plan: SeedPlan,
         type_defaults: TypeDefaults = TYPE_DEFAULTS,
         batch_size: int = 1000,  # Configurable batch size
@@ -36,7 +36,7 @@ class SeedLayer:
         """Initialize the SeedLayer instance.
 
         Args:
-            session: SQLAlchemy session for database operations.
+            engine: SQLAlchemy engine for database operations.
             seed_plan: Dictionary mapping model classes to number of rows to seed.
             type_defaults: Custom type defaults to override TYPE_DEFAULTS.
             batch_size: Number of rows to process in each batch. Defaults to 1000.
@@ -47,13 +47,13 @@ class SeedLayer:
             raise ValueError("batch_size must be at least 1")
         self.type_defaults: TypeDefaults = TYPE_DEFAULTS | type_defaults
         self.faker: Faker = Faker()
-        self._session: Session = session
+        self._engine = engine
         self._model_dependency_graph: DependencyGraph = DependencyGraph()
         self._seed_plan: SeedPlan = seed_plan
         self._batch_size: int = batch_size
         self.models: dict[str, SeededModel] = {}
         for model_class, nb_of_rows_to_seed in seed_plan.items():
-            model = SeededModel(model_class, nb_of_rows_to_seed, session, seed_plan)
+            model = SeededModel(model_class, nb_of_rows_to_seed, seed_plan)
             self._model_dependency_graph.add(
                 model.name,
                 model.foreign_key_dependencies,
@@ -86,24 +86,24 @@ class SeedLayer:
         if seed is not None:
             self.faker.seed_instance(seed)
 
-    def seed(self, single_transaction: bool = False) -> None:
+    def seed(self) -> None:
         """Seed the models in the seed plan.
 
         This method executes the seeding process for all configured models,
         generating and inserting fake data according to the seed plan.
 
-        Args:
-            single_transaction: Whether to wrap all seeding operations in a
-                single database transaction. Defaults to False.
+        All seeding operations are performed within a single database transaction
+        to ensure atomicity and consistency.
         """
-        logger.info(f"Model seeding order: {[m for m in self.model_seed_order]}")
-        if single_transaction:
-            with self._session.begin():
-                self._seed_models(single_transaction=True)
-        else:
-            self._seed_models(single_transaction=False)
+        with sessionmaker(bind=self._engine)() as session:
+            logger.info(f"Model seeding order: {[m for m in self.model_seed_order]}")
+            # Load existing data + seed all in single transaction
+            with session.begin():
+                for model in self.models.values():
+                    model.load_existing(session)
+                self._seed_models(session)
 
-    def _seed_models(self, single_transaction: bool) -> None:
+    def _seed_models(self, session: "Session") -> None:
         """Internal method to seed models in batches using bulk_insert_mappings."""
         for model_name in self.model_seed_order:
             model = self.models[model_name]
@@ -125,8 +125,8 @@ class SeedLayer:
                 )
 
                 # Use bulk_insert_mappings with the Mapper object
-                self._session.bulk_insert_mappings(class_mapper(model.base_model), fake_rows)
-                self._session.flush()
+                session.bulk_insert_mappings(class_mapper(model.base_model), fake_rows)
+                session.flush()
 
                 # Query all rows for this model to update primary keys and unique values
                 query = (
@@ -139,16 +139,14 @@ class SeedLayer:
                     .order_by(getattr(model.base_model, model.primary_keys[0]).desc())
                     .limit(batch_count)
                 )
-                result = self._session.execute(query).all()
+                result = session.execute(query).all()
                 model._process_query_result(result, new_data=True)
 
-                if not single_transaction:
-                    self._session.commit()
                 remaining_rows -= batch_count
-                logger.debug(f"Committed batch, {remaining_rows} rows remaining for {model.name}")
-
-            if single_transaction:
-                self._session.commit()
+                logger.debug(
+                    f"Processed batch of {batch_count} rows, "
+                    f"{remaining_rows} rows remaining for {model.name}"
+                )
 
     def __repr__(self) -> str:
         """Return a string representation of the SeedLayer instance."""

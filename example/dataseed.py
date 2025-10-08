@@ -3,7 +3,6 @@ import os
 
 from faker.providers import BaseProvider
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from seedlayer import SeedLayer
 from seedlayer.types import SeedPlan
@@ -13,6 +12,8 @@ from .models import Base, Category, Customer, Order, OrderItem, Product
 # Setup database and seeding
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "seeded_data.db"))
 engine = create_engine(f"sqlite:///{db_path}", echo=False)
+
+# Create the structure of the DB
 Base.metadata.create_all(engine)
 
 
@@ -44,16 +45,14 @@ seed_plan: SeedPlan = {
     OrderItem: 700,
 }
 
-Session = sessionmaker(bind=engine)
-with Session() as session:
-    # Initiate SeedLayer with session and plan
-    seed_layer = SeedLayer(session, seed_plan)
+# Initiate SeedLayer with engine and plan
+seed_layer = SeedLayer(engine, seed_plan)
 
-    # Set seed for reproducible results
-    seed_layer.configure_faker(seed=42)
+# Set seed for reproducible results
+seed_layer.configure_faker(seed=42)
 
-    # Add custom Faker provider
-    seed_layer.add_faker_provider(CustomCommerceProvider)
+# Add custom Faker provider
+seed_layer.add_faker_provider(CustomCommerceProvider)
 
-    # Generate Data
-    seed_layer.seed()
+# Generate Data
+seed_layer.seed()  # Always uses single transaction now

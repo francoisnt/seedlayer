@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from faker import Faker
 from sqlalchemy import Column
-from sqlalchemy.orm import Session
 from sqlalchemy.sql.schema import Table
 
 from .constants import TYPE_DEFAULTS, TypeDefaults
@@ -23,7 +22,6 @@ class SeededModel:
         self,
         model: type[Any],
         nb_of_rows_to_seed: int,
-        session: Session,
         seed_plan: SeedPlan,
     ) -> None:
         """Initialize the SeededModel with model details and seeding plan."""
@@ -89,14 +87,14 @@ class SeededModel:
 
         self.unique_values: UniqueValues = {col: set() for col in self.unique_columns}
 
-        # Load existing rows
-        query = session.query(
-            *[getattr(model, col) for col in self.primary_keys + self.unique_columns]
-        )
-
-        self._process_query_result(query, new_data=False)
-
         self.columns_seed_order = dependency_graph.topological_sort()
+
+    def load_existing(self, session: Any) -> None:
+        """Load existing rows from the database for this model."""
+        query = session.query(
+            *[getattr(self.base_model, col) for col in self.primary_keys + self.unique_columns]
+        )
+        self._process_query_result(query, new_data=False)
 
     def _process_query_result(self, query: Iterable[Any], new_data: bool = False) -> None:
         id_target = self.new_ids if new_data else self.existing_ids
