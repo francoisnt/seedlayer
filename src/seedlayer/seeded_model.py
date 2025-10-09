@@ -1,7 +1,5 @@
 from collections.abc import Iterable, Mapping
-from itertools import islice, product
-from random import shuffle
-from typing import Any, cast
+from typing import Any
 
 from faker import Faker
 from sqlalchemy import Column
@@ -9,31 +7,11 @@ from sqlalchemy.sql.schema import Table
 
 from .constants import TYPE_DEFAULTS, TypeDefaults
 from .dependency_graph import DependencyGraph
+from .fk_combination_generator import FKCombinationGenerator
 from .primary_keys import PrimaryKeys
 from .seed import Seed
 from .seeded_column import SeededColumnMixin
 from .types import SeedPlan, UniqueValues
-
-
-class FKCombinationGenerator:
-    """Generates and manages unique foreign key combinations for link tables."""
-
-    def __init__(
-        self,
-        seeded_model: "SeededModel",
-        models: Mapping[str, "SeededModel"],
-        total_needed: int,
-    ) -> None:
-        """Initialize with all combinations generated and shuffled once."""
-        all_combinations = list(seeded_model.get_fk_combinations(models, total_needed))
-        shuffle(all_combinations)
-        self.combinations = all_combinations
-
-    def get_next_batch(self, n: int) -> list[dict[str, Any]]:
-        """Return next n combinations and remove them from the pool."""
-        batch = self.combinations[:n]
-        self.combinations = self.combinations[n:]
-        return batch
 
 
 class SeededModel:
@@ -48,10 +26,11 @@ class SeededModel:
         """Initialize the SeededModel with model details and seeding plan."""
         self.combination_generator: FKCombinationGenerator | None = None
         self.is_link_table = False
-        table = getattr(model, "__table__", None)
-        if table is None:
+
+        if not hasattr(model, "__table__"):
             raise ValueError(f"Model {model.__name__} has no __table__ attribute")
-        self.table = cast(Table, table)
+        self.table: Table = model.__table__
+
         self.base_model: type[Any] = model
         self.nb_of_rows_to_seed = nb_of_rows_to_seed
         self.name = model.__name__
@@ -143,62 +122,6 @@ class SeededModel:
                 if value is not None:
                     self.unique_values[col_name].add(value)
 
-    def get_fk_combinations(
-        self, models: Mapping[str, "SeededModel"], n: int
-    ) -> list[dict[str, Any]]:
-        """Return up to *n* deterministic FK value combinations.
-
-        * Correct mapping: field order is driven by ``fk_targets``.
-        * Scalable: uses an iterator over ``itertools.product`` and stops at *n*,
-          so it never materialises the full Cartesian product.
-        * Works when FK target tables have unequal row counts.
-
-        """
-        # ── 1. Collect PK-FK metadata ──────────────────────────────────────────────
-        primary_fk_columns = [
-            col for col in self.columns.values() if col.primary_key and col.foreign_keys
-        ]
-        if len(primary_fk_columns) <= 1:
-            return []
-
-        fk_targets: list[str] = []  # column names in *deterministic* order
-        value_lists: list[list[Any]] = []  # values per FK column (may differ in length)
-
-        for col in primary_fk_columns:
-            if len(col.foreign_keys) != 1:
-                raise ValueError(
-                    f"Column '{col.name}' in model '{self.name}' has "
-                    f"{len(col.foreign_keys)} foreign keys; expected exactly one."
-                )
-            fk = next(iter(col.foreign_keys))
-            target_table = fk.column.table
-            target_model = self.table_to_model(col, target_table, models)
-
-            target_field = fk.column.name
-            pk_data = models[target_model.name].new_ids  # PrimaryKeys object
-
-            if not pk_data:
-                raise ValueError(f"No new IDs for FK '{col.name}' -> '{target_table.name}'")
-
-            ids = [pk[target_field] for pk in pk_data.dicts()]
-            if not ids:
-                raise ValueError(f"No '{target_field}' values found in '{target_table.name}'")
-
-            fk_targets.append(col.name)
-            value_lists.append(ids)
-
-        # ── 2. Validate requested sample size ──────────────────────────────────────
-        max_combos = 1
-        for ids in value_lists:
-            max_combos *= len(ids)
-        if n > max_combos:
-            raise ValueError(f"Requested {n} combos, but only {max_combos} possible.")
-
-        # ── 3. Build the iterator and slice lazily ─────────────────────────────────
-        combo_iter = (dict(zip(fk_targets, combo, strict=True)) for combo in product(*value_lists))
-
-        return list(islice(combo_iter, n))
-
     def table_to_model(
         self,
         column: Any,
@@ -235,39 +158,54 @@ class SeededModel:
 
         # Handle Primary keys that are also foreign keys, must use valid combination
         if column.foreign_keys and column.primary_key:
-            if pfk_combo is None:
-                raise ValueError(
-                    f"No combination of foreign keys provided for column {column} "
-                    f"in model {self.name}"
-                )
-
-            if col_name not in pfk_combo:
-                raise ValueError(
-                    f"Field '{col_name}' not found in primary key combination : {pfk_combo}"
-                )
-
-            return pfk_combo[col_name]
+            return self._fake_primary_fk_column(column, col_name, pfk_combo)
 
         if column.foreign_keys:
-            # For now: assume single FK per column
-            fk = next(iter(column.foreign_keys))
-            target_table = fk.column.table
-            target_model = self.table_to_model(column, target_table, models)
+            return self._fake_foreign_key_column(column, models)
 
-            # Pick random ID from models and extract the scalar value
-            pk_mapping = models[target_model.name].new_ids.get_random()
-            target_field = fk.column.name  # The referenced column name (e.g., 'id')
-            return pk_mapping[target_field]
+        return self._fake_regular_column(column, col_name, faker, column_context)
 
-            # Pick random ID from models
-            # return models[target_model.name].new_ids.get_random()
+    def _fake_primary_fk_column(
+        self, column: Column[Any], col_name: str, pfk_combo: Mapping[str, Any] | None
+    ) -> Any:
+        """Handle generation of primary-foreign key columns."""
+        if pfk_combo is None:
+            msg = (
+                f"No combination of foreign keys provided for column {column} in model {self.name}"
+            )
+            raise ValueError(msg)
 
+        if col_name not in pfk_combo:
+            msg = f"Field '{col_name}' not found in primary key combination: {pfk_combo}"
+            raise ValueError(msg)
+
+        return pfk_combo[col_name]
+
+    def _fake_foreign_key_column(
+        self, column: Column[Any], models: Mapping[str, "SeededModel"]
+    ) -> Any:
+        """Handle generation of regular foreign key columns."""
+        fk = next(iter(column.foreign_keys))
+        target_table = fk.column.table
+        target_model = self.table_to_model(column, target_table, models)
+
+        # Pick random ID from models and extract the scalar value
+        pk_mapping = models[target_model.name].new_ids.get_random()
+        target_field = fk.column.name  # The referenced column name (e.g., 'id')
+        return pk_mapping[target_field]
+
+    def _fake_regular_column(
+        self,
+        column: Column[Any],
+        col_name: str,
+        faker: Faker,
+        column_context: dict[str, Any],
+    ) -> Any:
+        """Handle generation of regular (non-FK) columns."""
         # Unique values logic
-        used_unique_values = None
+        used_unique_values = self.unique_values[column.name] if column.unique else None
 
-        if column.unique is True:
-            used_unique_values = self.unique_values[column.name]
-
+        # SeededColumnMixin takes precedence
         if issubclass(column.__class__, SeededColumnMixin) and column.seed is not None:
             return column.generate(
                 faker=faker,
@@ -275,6 +213,7 @@ class SeededModel:
                 used_unique_values=used_unique_values,
             )
 
+        # Type-based defaults
         for base_type, seed in TYPE_DEFAULTS.items():
             if isinstance(column.type, base_type):
                 if isinstance(seed, str):
@@ -285,22 +224,23 @@ class SeededModel:
                     used_unique_values=used_unique_values,
                 )
 
+        # Column defaults
         if column.default is not None:
             default_arg = getattr(column.default, "arg", None)
             if callable(default_arg):
                 return default_arg()
             return default_arg
 
-        if column.server_default:
+        # Fallbacks for nullable or server-default columns
+        if column.server_default or column.nullable:
             return None
 
-        if column.nullable:
-            return None
-
-        raise ValueError(
-            f"Not Null column {col_name} on model {self.name} doesn't have a way to resolve a fake \
-            value (no autoincrement, default value or seed  )"
+        # No fallback available for non-nullable column
+        msg = (
+            f"Non-nullable column '{col_name}' in model '{self.name}' has no generator: "
+            "no seed, type default, or callable default found."
         )
+        raise ValueError(msg)
 
     def fake_row(
         self,
