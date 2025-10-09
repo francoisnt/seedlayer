@@ -15,6 +15,27 @@ from .seeded_column import SeededColumnMixin
 from .types import SeedPlan, UniqueValues
 
 
+class FKCombinationGenerator:
+    """Generates and manages unique foreign key combinations for link tables."""
+
+    def __init__(
+        self,
+        seeded_model: "SeededModel",
+        models: Mapping[str, "SeededModel"],
+        total_needed: int,
+    ) -> None:
+        """Initialize with all combinations generated and shuffled once."""
+        all_combinations = list(seeded_model.get_fk_combinations(models, total_needed))
+        shuffle(all_combinations)
+        self.combinations = all_combinations
+
+    def get_next_batch(self, n: int) -> list[dict[str, Any]]:
+        """Return next n combinations and remove them from the pool."""
+        batch = self.combinations[:n]
+        self.combinations = self.combinations[n:]
+        return batch
+
+
 class SeededModel:
     """Container class for managing data seeding on a specific SQLAlchemy model."""
 
@@ -25,6 +46,7 @@ class SeededModel:
         seed_plan: SeedPlan,
     ) -> None:
         """Initialize the SeededModel with model details and seeding plan."""
+        self.combination_generator: FKCombinationGenerator | None = None
         self.is_link_table = False
         table = getattr(model, "__table__", None)
         if table is None:
@@ -316,15 +338,18 @@ class SeededModel:
     ) -> list[dict[str, Any]]:
         """Generate a list of n fake row dictionaries for the model."""
         if self.is_link_table:
-            pfk_possible_combinations = self.get_fk_combinations(models, n)
+            if self.combination_generator is None:
+                self.combination_generator = FKCombinationGenerator(
+                    self, models, self.nb_of_rows_to_seed
+                )
 
-            shuffled_combinations = list(pfk_possible_combinations)
-            shuffle(shuffled_combinations)
+            combos_to_use = self.combination_generator.get_next_batch(n)
+
             rows = [
                 self.fake_row(
                     models=models, faker=faker, type_defaults=type_defaults, pfk_combo=combo
                 )
-                for combo in shuffled_combinations[:n]
+                for combo in combos_to_use
             ]
 
         else:

@@ -360,6 +360,7 @@ Contributions are welcome! Please submit a pull request or open an issue on the 
    uv run pytest --cov=seedlayer        # run tests with coverage
    uv run ruff check .                  # lint
    uv run ruff format                   # autoformat
+   uv run pre-commit install            # install pre-commit
    ```
 
 4. Make your changes and submit a pull request.

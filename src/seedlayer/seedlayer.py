@@ -107,11 +107,10 @@ class SeedLayer:
         """Internal method to seed models in batches using bulk_save_objects."""
         for model_name in self.model_seed_order:
             model = self.models[model_name]
-            count = model.nb_of_rows_to_seed
-            logger.info(f"Seeding {count} rows for {model.name}")
+            logger.info(f"Seeding {model.nb_of_rows_to_seed} rows for {model.name}")
 
             # Process rows in batches
-            remaining_rows = count
+            remaining_rows = model.nb_of_rows_to_seed
             while remaining_rows > 0:
                 batch_count = min(self._batch_size, remaining_rows)
                 logger.debug(f"Processing batch of {batch_count} rows for {model.name}")

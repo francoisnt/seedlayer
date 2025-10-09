@@ -38,11 +38,11 @@ class CustomCommerceProvider(BaseProvider):
 
 # Define seed plan:
 seed_plan: SeedPlan = {
-    Category: 700,
-    Product: 700,
-    Customer: 700,
-    Order: 700,
-    OrderItem: 700,
+    Category: 7000,
+    Product: 7000,
+    Customer: 7000,
+    Order: 7000,
+    OrderItem: 7000,
 }
 
 # Initiate SeedLayer with engine and plan
