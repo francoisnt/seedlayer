@@ -13,3 +13,9 @@ repos:
         entry: uv run pytest -q
         language: system
         pass_filenames: false
+
+      - id: mypy
+        name: Mypy (type checks)
+        entry: uv run mypy
+        language: system
+        pass_filenames: false
