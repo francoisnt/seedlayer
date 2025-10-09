@@ -41,7 +41,7 @@ class DependencyGraph:
                 incoming[node] += 1
 
         # 3. Kahn's algorithm
-        queue = deque(n for n, deg in incoming.items() if deg == 0)
+        queue = deque(sorted(n for n, deg in incoming.items() if deg == 0))
         order: list[str] = []
 
         while queue:
