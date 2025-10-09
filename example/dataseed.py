@@ -13,6 +13,10 @@ from .models import Base, Category, Customer, Order, OrderItem, Product
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "seeded_data.db"))
 engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
+# Delete existing DB if it exists
+if os.path.exists(db_path):
+    os.remove(db_path)
+
 # Create the structure of the DB
 Base.metadata.create_all(engine)
 
@@ -38,11 +42,11 @@ class CustomCommerceProvider(BaseProvider):
 
 # Define seed plan:
 seed_plan: SeedPlan = {
-    Category: 7000,
-    Product: 7000,
-    Customer: 7000,
-    Order: 7000,
-    OrderItem: 7000,
+    Category: 70000,
+    Product: 70000,
+    Customer: 70000,
+    Order: 70000,
+    OrderItem: 70000,
 }
 
 # Initiate SeedLayer with engine and plan
