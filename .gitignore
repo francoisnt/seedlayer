@@ -22,4 +22,5 @@ wheels/
 docs/source/api/*
 docs/_build/
 
-
+# ruff
+.ruff_cache/
