@@ -30,13 +30,16 @@ class CustomCommerceProvider(BaseProvider):
         colors = ["Red", "Blue", "Green", "Yellow", "White", "Silver"]
         materials = ["Steel", "Wooden", "Plastic", "Cotton", "Granite", "Leather"]
         products = ["Bookshelf", "Cabinet", "Dresser", "Mattress", "Headset", "Camera"]
-        return f"\
-            {self.random_element(adjectives)} \
-            {self.random_element(sizes)} \
-            {self.random_element(colors)} \
-            {self.random_element(materials)} \
-            {self.random_element(products)} \
-            {self.random_int(min=1, max=9000)} "
+        return " ".join(
+            [
+                self.random_element(adjectives),
+                self.random_element(sizes),
+                self.random_element(colors),
+                self.random_element(materials),
+                self.random_element(products),
+                str(self.random_int(min=1, max=9000)),
+            ]
+        )
 
 
 # Define seed plan:
