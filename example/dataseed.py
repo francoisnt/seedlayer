@@ -1,4 +1,3 @@
-# import sys
 import os
 
 from faker.providers import BaseProvider
@@ -42,11 +41,11 @@ class CustomCommerceProvider(BaseProvider):
 
 # Define seed plan:
 seed_plan: SeedPlan = {
-    Category: 70000,
-    Product: 70000,
-    Customer: 70000,
-    Order: 70000,
-    OrderItem: 70000,
+    Category: 700,
+    Product: 700,
+    Customer: 700,
+    Order: 700,
+    OrderItem: 700,
 }
 
 # Initiate SeedLayer with engine and plan
