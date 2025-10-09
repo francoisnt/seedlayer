@@ -1,15 +1,13 @@
 import os
 import sys
+from datetime import timedelta
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from seedlayer import (
-    Seed,
-    SeededColumn,
-)
+from seedlayer import ColumnReference, Seed, SeededColumn
 
 Base = declarative_base()
 
@@ -55,12 +53,24 @@ class Order(Base):
     __tablename__ = "orders"
     id = SeededColumn(Integer, primary_key=True, autoincrement=True)
     customer_id = SeededColumn(Integer, ForeignKey("customers.id"), seed=None)
-    order_date = SeededColumn(DateTime, seed=Seed("date_time_this_year"))
+    order_date = SeededColumn(DateTime, seed=Seed("date_time_this_year"), nullable=False)
     total_amount = SeededColumn(
         Float,
         seed=Seed(
             "pyfloat", faker_kwargs={"min_value": 10.0, "max_value": 1000.0, "right_digits": 2}
         ),
+    )
+    return_date = SeededColumn(
+        DateTime,
+        seed=Seed(
+            faker_provider="date_time_between",
+            faker_kwargs={
+                "start_date": ColumnReference("order_date", lambda t: t + timedelta(minutes=30)),
+                "end_date": ColumnReference("order_date", lambda t: t + timedelta(days=30)),
+            },
+        ),
+        nullable=True,
+        nullable_chance=90,
     )
 
 
