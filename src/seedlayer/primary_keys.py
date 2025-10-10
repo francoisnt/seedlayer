@@ -1,6 +1,7 @@
-import random
 from collections.abc import Hashable, Iterable, Iterator
 from typing import Generic
+
+from faker import Faker
 
 from .types import PK
 
@@ -80,11 +81,11 @@ class PrimaryKeys(Generic[PK]):
         for pk in self._pks:
             yield self._as_mapping(pk)
 
-    def get_random(self) -> dict[str, PK]:
+    def get_random(self, faker: Faker) -> dict[str, PK]:
         """Return a random primary key as a mapping of column name to value."""
         if not self._pks:
             raise ValueError("No primary keys available")
-        return self._as_mapping(random.choice(tuple(self._pks)))  # noqa: S311
+        return self._as_mapping(faker.random_element(tuple(self._pks)))
 
     def __len__(self) -> int:
         """Return the number of primary keys stored."""

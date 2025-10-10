@@ -161,7 +161,7 @@ class SeededModel:
             return self._fake_primary_fk_column(column, col_name, pfk_combo)
 
         if column.foreign_keys:
-            return self._fake_foreign_key_column(column, models)
+            return self._fake_foreign_key_column(column, models, faker)
 
         return self._fake_regular_column(column, col_name, faker, column_context)
 
@@ -182,7 +182,7 @@ class SeededModel:
         return pfk_combo[col_name]
 
     def _fake_foreign_key_column(
-        self, column: Column[Any], models: Mapping[str, "SeededModel"]
+        self, column: Column[Any], models: Mapping[str, "SeededModel"], faker: Faker
     ) -> Any:
         """Handle generation of regular foreign key columns."""
         fk = next(iter(column.foreign_keys))
@@ -190,7 +190,7 @@ class SeededModel:
         target_model = self.table_to_model(column, target_table, models)
 
         # Pick random ID from models and extract the scalar value
-        pk_mapping = models[target_model.name].new_ids.get_random()
+        pk_mapping = models[target_model.name].new_ids.get_random(faker)
         target_field = fk.column.name  # The referenced column name (e.g., 'id')
         return pk_mapping[target_field]
 
@@ -279,8 +279,9 @@ class SeededModel:
         """Generate a list of n fake row dictionaries for the model."""
         if self.is_link_table:
             if self.combination_generator is None:
+                # faker generated seed for FKCombinationGenerator will be deterministic if faker is
                 self.combination_generator = FKCombinationGenerator(
-                    self, models, self.nb_of_rows_to_seed
+                    self, models, faker.random_int(min=0, max=2**32 - 1)
                 )
 
             combos_to_use = self.combination_generator.get_next_batch(n)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import random
 from collections.abc import Mapping
 from itertools import product
@@ -11,12 +10,14 @@ if TYPE_CHECKING:
 
 
 class FKCombinationGenerator:
-    """Generates deterministic-but-random FK combinations for link tables.
+    """Generates FK combinations for link tables.
 
-    Position-based determinism:
+    When seeded, sampling is position-based deterministic:
       - The RNG is seeded from the *order* of `_fk_targets` and `_value_lists`.
-      - If the same inputs arrive in the same order, the same sample is produced.
+      - If the same inputs arrive in the same order and same seed, the same sample is produced.
       - If the order changes, results change (even if values are the same).
+
+    When no seed is provided, sampling is random.
 
     Performance:
       - Uses indexed sampling with mixed-radix decoding to avoid streaming the
@@ -27,18 +28,17 @@ class FKCombinationGenerator:
         self,
         seeded_model: SeededModel,
         models: Mapping[str, SeededModel],
-        seed: int | None = None,
+        seed: int,
     ) -> None:
         """Initialize the FKCombinationGenerator.
 
         Collects FK metadata for composite FK-PK columns, validates their structure,
-        gathers candidate ID values from target tables, and initializes a deterministic RNG.
+        gathers candidate ID values from target tables, and initializes an RNG.
 
         Args:
             seeded_model: The seeded model containing FK-PK columns to generate combinations for.
             models: Dictionary of all seeded models, keyed by name.
-            seed: Optional seed for the RNG. If None, generates a deterministic seed based on model
-                name and FK order.
+            seed: Optional seed for the RNG. If None, the RNG is not seeded (non-deterministic).
         """
         # Collect FK metadata in deterministic (as given) order
         self._fk_targets: list[str] = []  # FK column names
@@ -77,17 +77,7 @@ class FKCombinationGenerator:
             self._fk_targets.append(col.name)
             self._value_lists.append(ids)
 
-        # Initialize deterministic RNG
-        if seed is None:
-            # Seed depends on the position/order of targets and values
-            h = hashlib.blake2b(digest_size=16)
-            h.update(str(seeded_model.name).encode())
-            h.update(b"|".join(name.encode() for name in self._fk_targets))
-            for vals in self._value_lists:
-                # Include order *and* content
-                h.update(("§" + repr(vals)).encode())
-            seed = int.from_bytes(h.digest(), "big")
-
+        # Initialize RNG
         self._rng = random.Random(seed)  # noqa: S311
 
     def _total_combos(self) -> int:
@@ -107,20 +97,20 @@ class FKCombinationGenerator:
         return coords
 
     def get_next_batch(self, n: int) -> list[dict[str, Any]]:
-        """Return n FK combinations with position-based deterministic sampling."""
+        """Return n FK combinations using uniform sampling."""
         if not self._fk_targets:
             return []
 
         total = self._total_combos()
         if n >= total:
-            # Return all combinations deterministically in product order
+            # Return all combinations in product order
             combo_iter = (
                 dict(zip(self._fk_targets, combo, strict=True))
                 for combo in product(*self._value_lists)
             )
             return list(combo_iter)
 
-        # Deterministic uniform sample of indices without replacement
+        # Uniform sample of indices without replacement
         picked_indices = self._rng.sample(range(total), n)
 
         out: list[dict[str, Any]] = []
