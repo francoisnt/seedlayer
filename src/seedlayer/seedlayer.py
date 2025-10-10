@@ -1,4 +1,5 @@
 import logging
+import random
 from pprint import pformat
 
 from faker import Faker
@@ -85,6 +86,7 @@ class SeedLayer:
                 self.faker.add_provider(provider)  # Re-add providers
         if seed is not None:
             self.faker.seed_instance(seed)
+            random.seed(seed)
 
     def seed(self) -> None:
         """Seed the models in the seed plan.
