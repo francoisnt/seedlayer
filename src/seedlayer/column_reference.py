@@ -20,7 +20,17 @@ class ColumnReference:
         self.transform = transform
 
     def map(self, column_context: SeededColumnContext) -> Any:
-        """Return the value of the column from column_context."""
+        """Return the value of the column from column_context, applying the transform if set.
+
+        Args:
+            column_context: Dictionary containing column values.
+
+        Returns:
+            The column value, potentially transformed.
+
+        Raises:
+            ValueError: If the column name is not found in column_context.
+        """
         if self.colname not in column_context:
             raise ValueError(f"Column '{self.colname}' not found in column_context")
 

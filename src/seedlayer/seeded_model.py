@@ -98,6 +98,12 @@ class SeededModel:
         self._process_query_result(query, new_data=False)
 
     def _process_query_result(self, query: Iterable[Any], new_data: bool = False) -> None:
+        """Process query results to load existing or newly generated data.
+
+        Args:
+            query: Iterable of row objects from the query.
+            new_data: Whether the data is newly generated or existing.
+        """
         id_target = self.new_ids if new_data else self.existing_ids
         for row in query:
             # Extract primary key values from model instances or Row objects

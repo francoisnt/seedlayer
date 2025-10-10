@@ -62,13 +62,27 @@ class Seed:
 
     @staticmethod
     def _generate_unique(
-        # self,
         faker_function: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: dict[Any, Any],
         used_values: set[Any],
         max_attempts: int = 100,
     ) -> Any:
+        """Generate a unique value that is not in used_values.
+
+        Args:
+            faker_function: The Faker function to call.
+            args: Positional arguments for the function.
+            kwargs: Keyword arguments for the function.
+            used_values: Set of values already used.
+            max_attempts: Maximum attempts to generate unique value.
+
+        Returns:
+            A unique value.
+
+        Raises:
+            RuntimeError: If unable to generate unique value after max_attempts.
+        """
         for _ in range(max_attempts):
             value = faker_function(*args, **kwargs)
             if value not in used_values:
@@ -90,6 +104,10 @@ class Seed:
 
         Returns:
             The generated fake data value.
+
+        Raises:
+            ValueError: If the Faker provider does not exist.
+            TypeError: If the arguments do not match the provider's signature.
         """
         # Validate that faker_provider exists
         if not hasattr(faker, self.provider):

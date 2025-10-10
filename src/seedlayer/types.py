@@ -1,3 +1,5 @@
+"""Type definitions for seedlayer."""
+
 from collections.abc import Hashable, Mapping
 from typing import Any, TypeVar
 
