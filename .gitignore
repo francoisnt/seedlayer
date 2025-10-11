@@ -24,3 +24,6 @@ docs/_build/
 
 # ruff
 .ruff_cache/
+
+# chinook ddl scripts
+tests/integration/chinook-ddl-scripts/*

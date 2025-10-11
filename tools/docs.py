@@ -9,21 +9,12 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from git import Repo
+from .utils import get_repo_absolute_path
 
 
 def main() -> None:
     """Find the repository, clean the API docs directory, and build Sphinx HTML documentation."""
-    # Find repo root
-    try:
-        repo = Repo(Path.cwd(), search_parent_directories=True)
-    except Exception as err:
-        raise RuntimeError("No valid Git repository found") from err
-
-    if repo.working_tree_dir is None:
-        raise RuntimeError("Repository is bare, cannot find working tree directory")
-
-    docs_root = Path(repo.working_tree_dir) / "docs"
+    docs_root = Path(get_repo_absolute_path()) / "docs"
 
     # Define paths
     src = docs_root / "source"

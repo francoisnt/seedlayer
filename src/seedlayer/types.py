@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 
 SeededColumnContext = dict[str, Any]
 
-SeedPlan = Mapping[type[Any], int]
+SeedingPlan = Mapping[type[Any], int]
 
 PK = TypeVar("PK", bound=Hashable)
 Primary_Key_names = tuple[str, ...]

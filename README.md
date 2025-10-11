@@ -19,7 +19,7 @@ SeedLayer is a **declarative** Python library designed to simplify the process o
 
 1. **Declarative Base Models**: Models must inherit from `sqlalchemy.orm.DeclarativeBase`.
 2. **Primary Keys**: Each model, other than link tables, must have a single primary key that is autoincremented. SeedLayer doesn't create a value for the primary key; it relies on the database managing them.
-3. **Foreign Key Constraints**: Foreign keys must reference a valid primary key column in other tables within the provided `SeedPlan`. The library assumes single foreign key constraints per column (multiple FKs per column are not supported).
+3. **Foreign Key Constraints**: Foreign keys must reference a valid primary key column in other tables within the provided `SeedingPlan`. The library assumes single foreign key constraints per column (multiple FKs per column are not supported).
 4. **Link Tables**: If a model's primary keys are all also foreign keys, it is treated as a link table, and the library generates valid combinations of foreign key values. The seed plan must not specify more rows than possible combinations of the combined primary key values.
 5. **Session Management**: A valid SQLAlchemy `Session` object must be provided for database operations.
 

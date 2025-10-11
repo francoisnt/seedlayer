@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from .constants import TYPE_DEFAULTS, TypeDefaults
 from .dependency_graph import DependencyGraph
 from .seeded_model import SeededModel
-from .types import SeedPlan
+from .types import SeedingPlan
 
 logging.basicConfig(  # root logger configuration
     level=logging.INFO,  # Enable DEBUG for detailed tracing
@@ -29,7 +29,7 @@ class SeedLayer:
     def __init__(
         self,
         engine: "Engine",
-        seed_plan: SeedPlan,
+        seed_plan: SeedingPlan,
         type_defaults: TypeDefaults = TYPE_DEFAULTS,
         batch_size: int = 1000,  # Configurable batch size
     ):
@@ -49,7 +49,7 @@ class SeedLayer:
         self.faker: Faker = Faker()
         self._engine = engine
         self._model_dependency_graph: DependencyGraph = DependencyGraph()
-        self._seed_plan: SeedPlan = seed_plan
+        self._seed_plan: SeedingPlan = seed_plan
         self._batch_size: int = batch_size
         self.models: dict[str, SeededModel] = {}
         for model_class, nb_of_rows_to_seed in seed_plan.items():

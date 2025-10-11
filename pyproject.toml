@@ -7,7 +7,11 @@ requires-python = ">=3.11"
 authors = [
     { name = "François Naggar-Tremblay", email = "francois.n.tremblay@gmail.com" }
 ]
-dependencies = ["SQLAlchemy>=2.0", "Faker>=37.5.3"]
+dependencies = [
+    "SQLAlchemy>=2.0",
+    "Faker>=37.5.3",
+    "typer>=0.19.2",
+]
 
 [project.scripts]
 
@@ -21,6 +25,7 @@ dev = [
   "pre-commit>=4.1.0",
   "pytest>=8.4.1",
   "pytest-cov==6.2.1",
+  "requests>=2.32.5",
   "ruff==0.12.10",
   "sphinx>=8",
   "sphinx-autodoc-typehints>=3.2.0",
@@ -29,6 +34,7 @@ dev = [
   "sphinx-rtd-theme>=3.0.2",
   "taskipy>=1.14.1",
   "toml>=0.10.2",
+  "types-requests>=2.32.4.20250913",
   "types-toml>=0.10.8.20240310",
 ]
 
@@ -59,6 +65,7 @@ convention = "google"
 
 [tool.taskipy.tasks]
 docs = "python -m tools.docs"
+dlchinook = "python -m tools.download-chinook-sql"
 
 [tool.uv.workspace]
 members = ["."]

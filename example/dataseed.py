@@ -4,7 +4,7 @@ from faker.providers import BaseProvider
 from sqlalchemy import create_engine
 
 from seedlayer import SeedLayer
-from seedlayer.types import SeedPlan
+from seedlayer.types import SeedingPlan
 
 from .models import Base, Category, Customer, Order, OrderItem, Product
 
@@ -43,7 +43,7 @@ class CustomCommerceProvider(BaseProvider):
 
 
 # Define seed plan:
-seed_plan: SeedPlan = {
+seed_plan: SeedingPlan = {
     Category: 700,
     Product: 700,
     Customer: 700,

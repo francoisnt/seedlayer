@@ -11,7 +11,7 @@ from .fk_combination_generator import FKCombinationGenerator
 from .primary_keys import PrimaryKeys
 from .seed import Seed
 from .seeded_column import SeededColumnMixin
-from .types import SeedPlan, UniqueValues
+from .types import SeedingPlan, UniqueValues
 
 
 class SeededModel:
@@ -21,7 +21,7 @@ class SeededModel:
         self,
         model: type[Any],
         nb_of_rows_to_seed: int,
-        seed_plan: SeedPlan,
+        seed_plan: SeedingPlan,
     ) -> None:
         """Initialize the SeededModel with model details and seeding plan."""
         self.combination_generator: FKCombinationGenerator | None = None
