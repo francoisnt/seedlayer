@@ -67,6 +67,8 @@ convention = "google"
 "tests/**/*" = ["S101", "T201", "S602", "D101", "E501"]
 
 [tool.taskipy.tasks]
+# Run Example
+example = "python -m example.dataseed"
 # Generate documentation
 docs = "python -m tools.docs"
 # Download testing ddl scripts

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 import random
 from collections.abc import Mapping
-from itertools import product
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .seeded_model import SeededModel
@@ -79,6 +81,7 @@ class FKCombinationGenerator:
 
         # Initialize RNG
         self._rng = random.Random(seed)  # noqa: S311
+        self._picked_indices: set[int] = set()
 
     def _total_combos(self) -> int:
         total = 1
@@ -96,26 +99,40 @@ class FKCombinationGenerator:
         coords.reverse()
         return coords
 
+    def _decode_combo(self, idx: int) -> dict[str, Any]:
+        """Convert a flat index into a FK combination dictionary."""
+        coords = self._decode_index(idx)
+        return {col: self._value_lists[i][coords[i]] for i, col in enumerate(self._fk_targets)}
+
     def get_next_batch(self, n: int) -> list[dict[str, Any]]:
-        """Return n FK combinations using uniform sampling."""
-        if not self._fk_targets:
+        """Return n FK combinations using uniform sampling without duplicates."""
+        if not self._fk_targets or n == 0:
             return []
 
-        total = self._total_combos()
-        if n >= total:
-            # Return all combinations in product order
-            combo_iter = (
-                dict(zip(self._fk_targets, combo, strict=True))
-                for combo in product(*self._value_lists)
-            )
-            return list(combo_iter)
+        total_combos = self._total_combos()
+        remaining_combos = total_combos - len(self._picked_indices)
+        logger.debug(f"Sampling {n} combinations from {remaining_combos} available")
 
-        # Uniform sample of indices without replacement
-        picked_indices = self._rng.sample(range(total), n)
+        if n > remaining_combos:
+            raise ValueError(f"Requested {n} more combinations but only {remaining_combos} remain")
 
-        out: list[dict[str, Any]] = []
-        for idx in picked_indices:
-            coords = self._decode_index(idx)
-            combo = {col: self._value_lists[i][coords[i]] for i, col in enumerate(self._fk_targets)}
-            out.append(combo)
-        return out
+        # If requesting most/all remaining combinations, gather them directly
+        if n >= remaining_combos:
+            logger.debug("Returning all remaining combinations")
+            remaining_indices = []
+            for idx in range(total_combos):
+                if idx not in self._picked_indices:
+                    remaining_indices.append(idx)
+            self._picked_indices.update(remaining_indices)
+            return [self._decode_combo(idx) for idx in remaining_indices]
+
+        # Use rejection sampling for partial sampling
+        logger.debug("Using rejection sampling for partial batch")
+        sampled_indices: list[int] = []
+        while len(sampled_indices) < n:
+            idx = self._rng.randrange(total_combos)
+            if idx not in self._picked_indices:
+                self._picked_indices.add(idx)
+                sampled_indices.append(idx)
+
+        return [self._decode_combo(idx) for idx in sampled_indices]
