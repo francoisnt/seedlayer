@@ -27,3 +27,10 @@ docs/_build/
 
 # chinook ddl scripts
 tests/integration/chinook-ddl-scripts/*
+
+# scalene profile
+profile.html
+profile.json
+
+# cprofile
+profile.stats

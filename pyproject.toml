@@ -23,10 +23,13 @@ dev = [
   "mypy>=1.18.1",
   "myst-parser>=4.0.1",
   "pre-commit>=4.1.0",
+  "py-spy>=0.4.1",
   "pytest>=8.4.1",
   "pytest-cov==6.2.1",
   "requests>=2.32.5",
   "ruff==0.12.10",
+  "scalene>=1.5.55",
+  "snakeviz>=2.2.2",
   "sphinx>=8",
   "sphinx-autodoc-typehints>=3.2.0",
   "sphinx-copybutton>=0.5.2",
@@ -61,11 +64,17 @@ extend-select = ["E501"]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*" = ["S101"]
+"tests/**/*" = ["S101", "T201", "S602", "D101", "E501"]
 
 [tool.taskipy.tasks]
+# Generate documentation
 docs = "python -m tools.docs"
+# Download testing ddl scripts
 dlchinook = "python -m tools.download-chinook-sql"
+# Performance analysis
+cprofile = "cd \"$(git rev-parse --show-toplevel)\"; python -m cProfile -s time -o profile.stats -m example.dataseed; snakeviz profile.stats"
+scalene = "cd \"$(git rev-parse --show-toplevel)\"; scalene -m example.dataseed --profile-all --profile-only \"seedlayer/src/seedlayer\""
+pyspy = "cd \"$(git rev-parse --show-toplevel)\"; py-spy top -- python -m example.dataseed"
 
 [tool.uv.workspace]
 members = ["."]
